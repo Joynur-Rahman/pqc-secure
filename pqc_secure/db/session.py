@@ -15,22 +15,29 @@ except ImportError:
     def setup_connection_pooling_listeners(engine):
         pass
 
+# Set up connect args depending on dialect
+connect_args = {}
+if settings.database_url.startswith("postgresql"):
+    connect_args = {
+        "connect_timeout": 10,
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
+    }
+elif settings.database_url.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
 # Create engine with advanced connection pooling
 engine = create_engine(
     settings.database_url,
-    poolclass=QueuePool,
-    pool_size=settings.database_pool_size,
-    max_overflow=20,
+    poolclass=QueuePool if not settings.database_url.startswith("sqlite") else None,
+    pool_size=settings.database_pool_size if not settings.database_url.startswith("sqlite") else 5,
+    max_overflow=20 if not settings.database_url.startswith("sqlite") else 10,
     pool_recycle=settings.database_pool_recycle,
-    pool_pre_ping=True,  # Verify connections before using them
-    echo=settings.debug,  # Log SQL in debug mode
-    connect_args={
-        "connect_timeout": 10,  # Connection timeout
-        "keepalives": 1,  # Enable TCP keepalives
-        "keepalives_idle": 30,  # Start keepalives after 30s
-        "keepalives_interval": 10,  # Send keepalives every 10s
-        "keepalives_count": 5,  # Give up after 5 failed keepalives
-    }
+    pool_pre_ping=True,
+    echo=settings.debug,
+    connect_args=connect_args
 )
 
 # Set up connection pool event listeners for monitoring

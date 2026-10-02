@@ -5,12 +5,12 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    liboqs \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project files
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md alembic.ini ./
 COPY pqc_secure ./pqc_secure
+COPY alembic ./alembic
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -e ".[pqc]"

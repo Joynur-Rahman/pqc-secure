@@ -11,8 +11,10 @@ from pqc_secure.schemas.auth import (
 )
 from pqc_secure.services.audit import (
     log_user_registered,
-    log_registration_failure
+    log_registration_failure,
+    log_authentication_event
 )
+from pqc_secure.db.models import AuditEventType
 from pqc_secure.middleware.rate_limit import rate_limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -83,10 +85,67 @@ async def register(
         )
 
 
-@router.post("/login")
-async def login():
-    """User login endpoint"""
-    pass
+@router.post("/login", response_model=UserRegisterResponse)
+async def login(
+    request: UserLoginRequest,
+    http_request: Request,
+    db: Session = Depends(get_db_session)
+):
+    """
+    User login endpoint.
+    
+    Authenticates a user with email and password and returns a session token.
+    
+    **Rate limit:** 5 requests per minute (auth endpoints)
+    """
+    # Check rate limit
+    if rate_limiter.check_auth_rate_limit(http_request):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again later."
+        )
+    
+    try:
+        success, user, error_msg = auth_service.authenticate_user(db, request.email, request.password)
+        
+        if not success:
+            log_authentication_event(
+                event_type=AuditEventType.LOGIN_FAILED,
+                status="failure",
+                details={"email": request.email, "reason": error_msg},
+                ip_address=http_request.client.host if http_request.client else None,
+                db_session=db
+            )
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=error_msg or "Invalid email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        session_token = auth_service.generate_token(user.id)
+        
+        log_authentication_event(
+            event_type=AuditEventType.USER_LOGIN,
+            status="success",
+            user_id=user.id,
+            ip_address=http_request.client.host if http_request.client else None,
+            db_session=db
+        )
+        
+        return UserRegisterResponse(
+            id=user.id,
+            email=user.email,
+            account_status=user.account_status,
+            session_token=session_token
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during login"
+        )
 
 @router.post("/logout")
 async def logout():
