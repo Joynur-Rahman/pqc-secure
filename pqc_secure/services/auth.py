@@ -251,3 +251,40 @@ class AuthService:
             db.rollback()
             logger.error(f"Unexpected error during user registration: {e}")
             return False, None, "Internal server error during registration"
+
+    def authenticate_user(self, db: Session, email: str, password: str) -> Tuple[bool, Optional[object], Optional[str]]:
+        """
+        Authenticate a user with email and password.
+        
+        Args:
+            db: Database session
+            email: User email address
+            password: User password
+            
+        Returns:
+            Tuple of (success, user, error_message)
+        """
+        # Lazy import to avoid db initialization at module level
+        from pqc_secure.db.models import User
+        
+        # Normalize email
+        normalized_email = self.normalize_email(email)
+        
+        # Find user
+        user = db.query(User).filter(User.email == normalized_email).first()
+        
+        if not user:
+            logger.warning(f"Failed login attempt for unknown email: {normalized_email}")
+            return False, None, "Invalid email or password"
+            
+        if user.account_status != "active":
+            logger.warning(f"Failed login attempt for inactive account: {normalized_email}")
+            return False, None, "Account is not active"
+            
+        # Verify password
+        if not self.verify_password(password, user.password_hash):
+            logger.warning(f"Failed login attempt for user: {user.id}")
+            return False, None, "Invalid email or password"
+            
+        return True, user, None
+

@@ -40,11 +40,11 @@
 - [x] Add integration tests
 
 ### 2.2 User Login API
-- [ ] Implement `/auth/login` POST endpoint
-- [ ] Email/password verification
-- [ ] Rate-limiting on login attempts
-- [ ] Session creation (JWT or secure cookie)
-- [ ] Return session token and user info
+- [x] Implement `/auth/login` POST endpoint
+- [x] Email/password verification
+- [x] Rate-limiting on login attempts
+- [x] Session creation (JWT or secure cookie)
+- [x] Return session token and user info
 - [ ] Add integration tests
 
 ### 2.3 Session Management
