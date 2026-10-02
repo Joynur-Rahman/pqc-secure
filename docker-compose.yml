@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pqc-postgres
+    environment:
+      POSTGRES_USER: pqc_user
+      POSTGRES_PASSWORD: pqc_password
+      POSTGRES_DB: pqc_secure
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pqc_user -d pqc_secure"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pqc_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: pqc-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/minio_data
+    command: server /minio_data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pqc_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pqc-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://pqc_user:pqc_password@postgres:5432/pqc_secure
+      STORAGE_TYPE: s3
+      STORAGE_BUCKET: pqc-files
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_USE_SSL: "false"
+      SECRET_KEY: your-secret-key-change-in-production
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:3001"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./pqc_secure:/app/pqc_secure
+    command: uvicorn pqc_secure.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - pqc_network
+
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  pqc_network:
+    driver: bridge
