@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import KeysPage from './pages/Keys'
+import UploadPage from './pages/Upload'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './hooks/useAuth'
@@ -29,6 +30,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <KeysPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="files/upload"
+            element={
+              <ProtectedRoute>
+                <UploadPage />
               </ProtectedRoute>
             }
           />

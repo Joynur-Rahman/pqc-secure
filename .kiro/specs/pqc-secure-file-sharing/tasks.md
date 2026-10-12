@@ -119,48 +119,48 @@
 ## Phase 4: File Upload & Encryption
 
 ### 4.1 File Upload API (Unencrypted Endpoint)
-- [ ] Implement `/files/upload` POST endpoint
-- [ ] File size validation (up to 500MB configurable)
-- [ ] Chunk upload support for large files
-- [ ] Progress tracking
-- [ ] Temporary storage of uploaded file
-- [ ] Add tests
+- [x] Implement `/files/upload` POST endpoint
+- [x] File size validation (up to 500MB configurable)
+- [x] Chunk upload support for large files
+- [x] Progress tracking
+- [x] Temporary storage of uploaded file
+- [x] Add tests
 
 ### 4.2 Encryption Pipeline
-- [ ] Implement recipient validation (check active keys)
-- [ ] Implement content-encryption key generation
-- [ ] Implement HKDF context binding (sender, recipients, version)
-- [ ] Implement AES-256-GCM encryption with fresh nonce
-- [ ] Implement nonce management (never reuse with same key)
-- [ ] Implement file chunking for large files
-- [ ] Add comprehensive tests
+- [x] Implement recipient validation (check active keys)
+- [x] Implement content-encryption key generation
+- [x] Implement HKDF context binding (sender, recipients, version)
+- [x] Implement AES-256-GCM encryption with fresh nonce
+- [x] Implement nonce management (never reuse with same key)
+- [x] Implement file chunking for large files
+- [x] Add comprehensive tests
 
 ### 4.3 Package Metadata & Signing
-- [ ] Define canonical package manifest format
-- [ ] Implement metadata signing using sender's private key (ML-DSA or Ed25519)
-- [ ] Implement signature verification logic
-- [ ] Store encrypted payload in storage (FS/MinIO)
-- [ ] Store metadata in database
-- [ ] Add tests
+- [x] Define canonical package manifest format
+- [x] Implement metadata signing using sender's private key (ML-DSA or Ed25519)
+- [x] Implement signature verification logic
+- [x] Store encrypted payload in storage (FS/MinIO)
+- [x] Store metadata in database
+- [x] Add tests
 
 ### 4.4 File Sharing Endpoint
-- [ ] Implement `/files/share` POST endpoint
-- [ ] Validate sender authentication
-- [ ] Validate recipient list
-- [ ] Validate recipient key versions and status
-- [ ] Select encryption mode (PQC or classical)
-- [ ] Orchestrate encryption pipeline
-- [ ] Create access grants for recipients
-- [ ] Return package ID and status
-- [ ] Add tests
+- [x] Implement `/files/share` POST endpoint
+- [x] Validate sender authentication
+- [x] Validate recipient list
+- [x] Validate recipient key versions and status
+- [x] Select encryption mode (PQC or classical)
+- [x] Orchestrate encryption pipeline
+- [x] Create access grants for recipients
+- [x] Return package ID and status
+- [x] Add tests
 
 ### 4.5 Upload UI
-- [ ] Create file upload form
-- [ ] Create recipient selector (multi-select)
-- [ ] Create encryption mode selector (PQC/classical)
-- [ ] Implement upload progress display
-- [ ] Add error handling and retry logic
-- [ ] Add tests
+- [x] Create file upload form
+- [x] Create recipient selector (multi-select)
+- [x] Create encryption mode selector (PQC/classical)
+- [x] Implement upload progress display
+- [x] Add error handling and retry logic
+- [x] Add tests
 
 ---
 

@@ -26,8 +26,9 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
   const url = `${API_BASE_URL}${endpoint}`
   const token = typeof window !== 'undefined' ? localStorage.getItem('session_token') : null
 
+  const isFormData = typeof FormData !== 'undefined' && options?.body instanceof FormData
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...((options?.headers as Record<string, string>) || {}),
   }
@@ -118,26 +119,50 @@ export const keyService = {
 }
 
 export const fileService = {
-  upload: (file: File) => {
+  upload: (file: File, uploadId?: string, chunkNumber = 0, totalChunks = 1) => {
     const formData = new FormData()
     formData.append('file', file)
-    return apiRequest<{ fileId: string }>('/files/upload', {
+    if (uploadId) formData.append('upload_id', uploadId)
+    formData.append('chunk_number', String(chunkNumber))
+    formData.append('total_chunks', String(totalChunks))
+    return apiRequest<{
+      upload_id: string
+      filename: string
+      chunk_number: number
+      total_chunks: number
+      bytes_uploaded: number
+      is_complete: boolean
+      message: string
+    }>('/files/upload', {
       method: 'POST',
       body: formData,
     })
   },
-  share: (fileId: string, recipientIds: string[], encryptionMode: 'pqc' | 'classical') =>
+  share: (
+    uploadId: string,
+    recipientEmails: string[],
+    encryptionMode: 'pqc' | 'classical' = 'pqc'
+  ) =>
     apiRequest<FilePackage>('/files/share', {
       method: 'POST',
-      body: JSON.stringify({ fileId, recipientIds, encryptionMode }),
+      body: JSON.stringify({
+        upload_id: uploadId,
+        recipient_emails: recipientEmails,
+        encryption_mode: encryptionMode,
+      }),
     }),
-  list: () => apiRequest<FilePackageMetadata[]>('/files'),
-  getPackage: (packageId: string) => apiRequest<FilePackage>(`/files/${packageId}`),
-  download: (packageId: string) => apiRequest<Blob>(`/files/${packageId}/download`, {
-    headers: { Accept: 'application/octet-stream' },
-  }),
+  list: () =>
+    apiRequest<{ packages: FilePackageMetadata[]; total: number }>('/files'),
+  getPackage: (packageId: string) =>
+    apiRequest<FilePackage>(`/files/${packageId}`),
+  download: (packageId: string) =>
+    apiRequest<Blob>(`/files/${packageId}/download`, {
+      headers: { Accept: 'application/octet-stream' },
+    }),
   revokeGrant: (packageId: string, grantId: string) =>
-    apiRequest<void>(`/files/${packageId}/grants/${grantId}/revoke`, { method: 'POST' }),
+    apiRequest<void>(`/files/${packageId}/grants/${grantId}/revoke`, {
+      method: 'POST',
+    }),
 }
 
 export const auditService = {
