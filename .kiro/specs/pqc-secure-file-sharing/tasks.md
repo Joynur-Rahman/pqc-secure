@@ -45,22 +45,22 @@
 - [x] Rate-limiting on login attempts
 - [x] Session creation (JWT or secure cookie)
 - [x] Return session token and user info
-- [ ] Add integration tests
+- [x] Add integration tests
 
 ### 2.3 Session Management
-- [ ] Implement session validation middleware
-- [ ] Create logout endpoint (`/auth/logout`)
-- [ ] Set secure cookie flags (Secure, HttpOnly, SameSite)
-- [ ] Session expiration handling
-- [ ] Add tests for session lifecycle
+- [x] Implement session validation middleware
+- [x] Create logout endpoint (`/auth/logout`)
+- [x] Set secure cookie flags (Secure, HttpOnly, SameSite)
+- [x] Session expiration handling
+- [x] Add tests for session lifecycle
 
 ### 2.4 Authentication UI Components
-- [ ] Create Register form component
-- [ ] Create Login form component
-- [ ] Implement form validation (client-side)
-- [ ] Add error handling and user feedback
-- [ ] Create protected route wrapper
-- [ ] Add tests for form components
+- [x] Create Register form component
+- [x] Create Login form component
+- [x] Implement form validation (client-side)
+- [x] Add error handling and user feedback
+- [x] Create protected route wrapper
+- [x] Add tests for form components
 
 ---
 

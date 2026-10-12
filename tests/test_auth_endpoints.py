@@ -965,3 +965,216 @@ class TestAuthIntegration:
         assert plain_password not in user.password_hash
 
 
+class TestAuthEndpointLogin:
+    """Test login endpoint integration with rate limiting and authentication"""
+
+    def test_login_endpoint_success(self, client, db_session):
+        """Test successful login via endpoint"""
+        reg_response = client.post(
+            "/auth/register",
+            json={
+                "email": "logintest@example.com",
+                "password": "SecurePass123"
+            }
+        )
+        assert reg_response.status_code == 201
+
+        response = client.post(
+            "/auth/login",
+            json={
+                "email": "logintest@example.com",
+                "password": "SecurePass123"
+            }
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["email"] == "logintest@example.com"
+        assert "session_token" in data
+        assert "id" in data
+        assert data["account_status"] == "active"
+
+    def test_login_endpoint_invalid_password(self, client, db_session):
+        """Test login with wrong password"""
+        client.post(
+            "/auth/register",
+            json={
+                "email": "wrongpass@example.com",
+                "password": "SecurePass123"
+            }
+        )
+
+        response = client.post(
+            "/auth/login",
+            json={
+                "email": "wrongpass@example.com",
+                "password": "WrongPassword999"
+            }
+        )
+
+        assert response.status_code == 401
+        assert "Invalid email or password" in response.json()["detail"]
+
+    def test_login_endpoint_nonexistent_user(self, client):
+        """Test login with non-existent email"""
+        response = client.post(
+            "/auth/login",
+            json={
+                "email": "nonexistent@example.com",
+                "password": "SecurePass123"
+            }
+        )
+
+        assert response.status_code == 401
+        assert "Invalid email or password" in response.json()["detail"]
+
+    def test_login_endpoint_inactive_account(self, client, db_session):
+        """Test login with inactive/suspended account"""
+        from pqc_secure.db.models import User
+
+        reg_res = client.post(
+            "/auth/register",
+            json={
+                "email": "suspended@example.com",
+                "password": "SecurePass123"
+            }
+        )
+        user_id = reg_res.json()["id"]
+
+        user = db_session.query(User).filter_by(id=user_id).first()
+        user.account_status = "suspended"
+        db_session.commit()
+
+        response = client.post(
+            "/auth/login",
+            json={
+                "email": "suspended@example.com",
+                "password": "SecurePass123"
+            }
+        )
+
+        assert response.status_code == 401
+        assert "Account is not active" in response.json()["detail"]
+
+    def test_login_endpoint_rate_limiting(self, client):
+        """Test rate limiting on login endpoint"""
+        from pqc_secure.core.config import settings
+
+        responses = []
+        for i in range(settings.rate_limit_auth_requests_per_minute + 1):
+            response = client.post(
+                "/auth/login",
+                json={
+                    "email": f"attempt{i}@example.com",
+                    "password": "Password123"
+                }
+            )
+            responses.append(response)
+
+        assert responses[-1].status_code == 429
+        assert "Too many login attempts" in responses[-1].json()["detail"]
+
+
+class TestAuthServiceAuthentication:
+    """Test AuthService.authenticate_user method"""
+
+    def test_authenticate_user_success(self, db_session):
+        """Test authenticating a user with correct credentials"""
+        from pqc_secure.services.auth import AuthService
+
+        service = AuthService()
+        reg_success, user, _ = service.register_user(
+            db_session,
+            "auth_user@example.com",
+            "SecurePass123"
+        )
+        assert reg_success is True
+
+        auth_success, auth_user, err = service.authenticate_user(
+            db_session,
+            "auth_user@example.com",
+            "SecurePass123"
+        )
+        assert auth_success is True
+        assert auth_user is not None
+        assert auth_user.id == user.id
+        assert err is None
+
+    def test_authenticate_user_wrong_password(self, db_session):
+        """Test authentication fails with wrong password"""
+        from pqc_secure.services.auth import AuthService
+
+        service = AuthService()
+        service.register_user(
+            db_session,
+            "wrong_pwd@example.com",
+            "SecurePass123"
+        )
+
+        auth_success, auth_user, err = service.authenticate_user(
+            db_session,
+            "wrong_pwd@example.com",
+            "WrongPassword456"
+        )
+        assert auth_success is False
+        assert auth_user is None
+        assert err == "Invalid email or password"
+
+    def test_authenticate_user_not_found(self, db_session):
+        """Test authentication fails for non-existent user"""
+        from pqc_secure.services.auth import AuthService
+
+        service = AuthService()
+        auth_success, auth_user, err = service.authenticate_user(
+            db_session,
+            "ghost@example.com",
+            "SecurePass123"
+        )
+        assert auth_success is False
+        assert auth_user is None
+        assert err == "Invalid email or password"
+
+    def test_authenticate_user_case_insensitive_email(self, db_session):
+        """Test authentication works regardless of email case"""
+        from pqc_secure.services.auth import AuthService
+
+        service = AuthService()
+        service.register_user(
+            db_session,
+            "case.sensitive@example.com",
+            "SecurePass123"
+        )
+
+        auth_success, auth_user, _ = service.authenticate_user(
+            db_session,
+            "CASE.SENSITIVE@EXAMPLE.COM",
+            "SecurePass123"
+        )
+        assert auth_success is True
+        assert auth_user is not None
+        assert auth_user.email == "case.sensitive@example.com"
+
+    def test_authenticate_user_inactive_account(self, db_session):
+        """Test authentication fails for non-active account"""
+        from pqc_secure.services.auth import AuthService
+
+        service = AuthService()
+        _, user, _ = service.register_user(
+            db_session,
+            "inactive@example.com",
+            "SecurePass123"
+        )
+        user.account_status = "suspended"
+        db_session.commit()
+
+        auth_success, auth_user, err = service.authenticate_user(
+            db_session,
+            "inactive@example.com",
+            "SecurePass123"
+        )
+        assert auth_success is False
+        assert auth_user is None
+        assert err == "Account is not active"
+
+
+

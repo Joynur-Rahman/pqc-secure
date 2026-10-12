@@ -26,11 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await authService.getSession()
       if (result.data) {
-        setSession(result.data)
-        setUser(result.data.user)
+        setUser(result.data)
+      } else {
+        setUser(null)
       }
     } catch (error) {
       console.error('Failed to load session:', error)
+      setUser(null)
     } finally {
       setLoading(false)
     }
@@ -39,19 +41,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     const result = await authService.login(email, password)
     if (result.data) {
-      setSession(result.data)
-      setUser(result.data.user)
+      const loggedInUser: User = {
+        id: result.data.id,
+        email: result.data.email,
+        account_status: result.data.account_status,
+      }
+      setUser(loggedInUser)
+      setSession({
+        session_token: result.data.session_token,
+        user: loggedInUser,
+      })
+    } else {
+      throw new Error(result.error || 'Login failed')
     }
   }
 
   async function logout() {
-    await authService.logout()
-    setSession(null)
-    setUser(null)
+    try {
+      await authService.logout()
+    } finally {
+      setSession(null)
+      setUser(null)
+    }
   }
 
   async function register(email: string, password: string) {
-    await authService.register(email, password)
+    const result = await authService.register(email, password)
+    if (!result.data) {
+      throw new Error(result.error || 'Registration failed')
+    }
   }
 
   return (
