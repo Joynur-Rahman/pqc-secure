@@ -57,17 +57,37 @@ class KeyService:
             raise InvalidKeyError(f"Unsupported algorithm: {algorithm}")
         norm_algorithm = CryptoService.normalize_algorithm(algorithm)
 
-        # 3. Decode base64 public key material
-        try:
-            public_key_bytes = CryptoService.decode_base64(public_key_b64)
-        except Exception as e:
-            raise InvalidKeyError(f"Invalid public key base64 data: {e}") from e
+        private_key_bytes = None
+        if not public_key_b64:
+            # Auto-generate keypair on server
+            if norm_algorithm == CryptoService.ALG_ML_KEM_768:
+                public_key_bytes, private_key_bytes = CryptoService.generate_keypair_kem()
+            elif norm_algorithm == CryptoService.ALG_ML_DSA_65:
+                public_key_bytes, private_key_bytes = CryptoService.generate_keypair_sig()
+            elif norm_algorithm == CryptoService.ALG_X25519:
+                public_key_bytes, private_key_bytes = CryptoService.generate_keypair_x25519()
+            elif norm_algorithm == CryptoService.ALG_ED25519:
+                public_key_bytes, private_key_bytes = CryptoService.generate_keypair_ed25519()
+            else:
+                raise InvalidKeyError(f"Cannot auto-generate key for {norm_algorithm}")
+        else:
+            # 3. Decode base64 public key material
+            try:
+                public_key_bytes = CryptoService.decode_base64(public_key_b64)
+            except Exception as e:
+                raise InvalidKeyError(f"Invalid public key base64 data: {e}") from e
 
-        # 4. Validate public key format and length
-        if not CryptoService.validate_public_key(norm_algorithm, public_key_bytes):
-            raise InvalidKeyError(
-                f"Public key bytes format or size invalid for algorithm {norm_algorithm}"
-            )
+            # 4. Validate public key format and length
+            if not CryptoService.validate_public_key(norm_algorithm, public_key_bytes):
+                raise InvalidKeyError(
+                    f"Public key bytes format or size invalid for algorithm {norm_algorithm}"
+                )
+
+            if private_key_b64:
+                try:
+                    private_key_bytes = CryptoService.decode_base64(private_key_b64)
+                except Exception:
+                    pass
 
         # 5. Compute canonical key ID
         canonical_key_id = CryptoService.generate_key_id(norm_algorithm, public_key_bytes)
@@ -94,13 +114,6 @@ class KeyService:
             .scalar()
         )
         next_version = (max_version or 0) + 1
-
-        private_key_bytes = None
-        if private_key_b64:
-            try:
-                private_key_bytes = CryptoService.decode_base64(private_key_b64)
-            except Exception:
-                pass
 
         # 8. Create and persist key record
         new_key = CryptographicKey(
@@ -203,6 +216,7 @@ class KeyService:
         algorithm = current_key.algorithm
 
         # Determine new public key bytes
+        new_priv_bytes = None
         if new_public_key_b64:
             new_pub_bytes = CryptoService.decode_base64(new_public_key_b64)
             if not CryptoService.validate_public_key(algorithm, new_pub_bytes):
@@ -212,13 +226,13 @@ class KeyService:
         else:
             # Generate new key pair on server
             if algorithm == CryptoService.ALG_ML_KEM_768:
-                new_pub_bytes, _ = CryptoService.generate_keypair_kem()
+                new_pub_bytes, new_priv_bytes = CryptoService.generate_keypair_kem()
             elif algorithm == CryptoService.ALG_ML_DSA_65:
-                new_pub_bytes, _ = CryptoService.generate_keypair_sig()
+                new_pub_bytes, new_priv_bytes = CryptoService.generate_keypair_sig()
             elif algorithm == CryptoService.ALG_X25519:
-                new_pub_bytes, _ = CryptoService.generate_keypair_x25519()
+                new_pub_bytes, new_priv_bytes = CryptoService.generate_keypair_x25519()
             elif algorithm == CryptoService.ALG_ED25519:
-                new_pub_bytes, _ = CryptoService.generate_keypair_ed25519()
+                new_pub_bytes, new_priv_bytes = CryptoService.generate_keypair_ed25519()
             else:
                 raise InvalidKeyError(f"Cannot auto-generate key for {algorithm}")
 
@@ -237,6 +251,7 @@ class KeyService:
             version=new_version,
             key_id=new_key_id,
             public_key_material=new_pub_bytes,
+            private_key_material=new_priv_bytes,
             status=KeyStatus.ACTIVE.value,
             created_at=datetime.now(timezone.utc),
         )

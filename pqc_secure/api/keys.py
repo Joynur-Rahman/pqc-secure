@@ -60,6 +60,7 @@ async def register_key(
             algorithm=body.algorithm,
             public_key_b64=body.public_key_material,
             key_type=body.key_type or "public",
+            private_key_b64=body.private_key_material,
             ip_address=client_ip,
             user_agent=user_agent,
         )

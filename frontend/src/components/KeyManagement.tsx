@@ -67,16 +67,13 @@ export const KeyManagement: React.FC = () => {
 
   const handleRegisterKey = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!publicKeyMaterial.trim()) {
-      setError('Public key material is required.')
-      return
-    }
 
     setIsRegistering(true)
     setError(null)
     setSuccessMessage(null)
 
-    const res = await keyService.register(selectedAlgorithm, publicKeyMaterial.trim())
+    const keyMaterialToSend = publicKeyMaterial.trim() || undefined
+    const res = await keyService.register(selectedAlgorithm, keyMaterialToSend)
     if (res.error) {
       setError(res.error)
     } else {
@@ -448,7 +445,7 @@ export const KeyManagement: React.FC = () => {
               rows={4}
               value={publicKeyMaterial}
               onChange={(e) => setPublicKeyMaterial(e.target.value)}
-              placeholder="Paste Base64-encoded public key bytes..."
+              placeholder="Leave blank to auto-generate a secure server-managed keypair (with private key for decryption), or paste custom Base64 public key..."
               style={{
                 width: '100%',
                 padding: '10px',
@@ -460,6 +457,9 @@ export const KeyManagement: React.FC = () => {
                 boxSizing: 'border-box',
               }}
             />
+            <p style={{ fontSize: '12px', color: 'var(--text, #666)', marginTop: '4px' }}>
+              💡 <strong>Recommended:</strong> Leave blank to generate a cryptographically valid quantum keypair with secure private key storage for decryption.
+            </p>
           </div>
 
           <button
