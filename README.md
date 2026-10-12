@@ -285,18 +285,23 @@ alembic revision --autogenerate -m "description"
 
 ## Deployment
 
-### Docker Compose
+### Full-Stack Docker Compose
+
+Run the entire platform (PostgreSQL, FastAPI Backend, and React Frontend) with a single command:
 
 ```bash
-docker-compose up
+docker-compose up -d --build
 ```
 
-This will start:
-- PostgreSQL database
-- FastAPI backend
-- Frontend development server
+This starts:
+- **`pqc-frontend`**: Nginx serving the production React 19 bundle with Tailwind CSS v4 and reverse proxying `/api/` to the backend on [http://localhost:3001](http://localhost:3001).
+- **`pqc-backend`**: FastAPI application running with `liboqs` support and Uvicorn on [http://localhost:8000](http://localhost:8000) (Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs)).
+- **`pqc-postgres`**: PostgreSQL 16 database on port `5432:5432` with healthcheck.
 
-See `DOCKER_SETUP.md` for more details.
+To stop the services:
+```bash
+docker-compose down
+```
 
 ## Documentation
 

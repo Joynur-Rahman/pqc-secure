@@ -16,10 +16,15 @@ export default function Dashboard() {
     try {
       const result = await fileService.list()
       if (result.data) {
-        setSharedFiles(result.data)
+        const raw = result.data as any
+        const list = Array.isArray(raw) ? raw : (Array.isArray(raw.packages) ? raw.packages : [])
+        setSharedFiles(list)
+      } else {
+        setSharedFiles([])
       }
     } catch (error) {
       console.error('Failed to load shared files:', error)
+      setSharedFiles([])
     } finally {
       setLoading(false)
     }
@@ -81,22 +86,29 @@ export default function Dashboard() {
             <p className="text-gray-500">No shared files yet.</p>
           ) : (
             <ul className="space-y-3">
-              {sharedFiles.map((file) => (
-                <li key={file.id} className="flex justify-between items-center py-3 border-b border-gray-100">
-                  <div>
-                    <p className="font-medium text-gray-900">{file.fileName}</p>
-                    <p className="text-sm text-gray-500">
-                      {file.senderEmail} • {formatFileSize(file.fileSize)} • {formatDate(file.createdAt)}
-                    </p>
-                  </div>
-                  <Link
-                    to={`/files/${file.id}`}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    View
-                  </Link>
-                </li>
-              ))}
+              {sharedFiles.map((file: any) => {
+                const pkgId = file.id || file.package_id
+                const fileName = file.fileName || file.original_filename || 'Encrypted File'
+                const sender = file.senderEmail || file.sender_email || 'Unknown'
+                const size = file.fileSize || file.file_size || 0
+                const createdAt = file.createdAt || file.created_at
+                return (
+                  <li key={pkgId} className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div>
+                      <p className="font-medium text-gray-900">{fileName}</p>
+                      <p className="text-sm text-gray-500">
+                        {sender} • {formatFileSize(size)} • {formatDate(createdAt)}
+                      </p>
+                    </div>
+                    <Link
+                      to="/shared-files"
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      View
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </div>
@@ -111,10 +123,17 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+function formatDate(dateString?: string): string {
+  if (!dateString) return 'Recent'
+  try {
+    const d = new Date(dateString)
+    if (isNaN(d.getTime())) return 'Recent'
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return 'Recent'
+  }
 }

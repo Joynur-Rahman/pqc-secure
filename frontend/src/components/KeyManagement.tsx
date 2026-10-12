@@ -57,7 +57,11 @@ export const KeyManagement: React.FC = () => {
 
     const randomBytes = new Uint8Array(keyBytesLength)
     window.crypto.getRandomValues(randomBytes)
-    const b64 = btoa(String.fromCharCode(...randomBytes))
+    let binary = ''
+    for (let i = 0; i < randomBytes.byteLength; i++) {
+      binary += String.fromCharCode(randomBytes[i])
+    }
+    const b64 = btoa(binary)
     setPublicKeyMaterial(b64)
   }
 
