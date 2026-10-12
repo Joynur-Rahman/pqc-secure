@@ -42,6 +42,7 @@ class KeyService:
         algorithm: str,
         public_key_b64: str,
         key_type: str = "public",
+        private_key_b64: Optional[str] = None,
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None,
     ) -> CryptographicKey:
@@ -94,6 +95,13 @@ class KeyService:
         )
         next_version = (max_version or 0) + 1
 
+        private_key_bytes = None
+        if private_key_b64:
+            try:
+                private_key_bytes = CryptoService.decode_base64(private_key_b64)
+            except Exception:
+                pass
+
         # 8. Create and persist key record
         new_key = CryptographicKey(
             id=str(uuid.uuid4()),
@@ -103,6 +111,7 @@ class KeyService:
             version=next_version,
             key_id=canonical_key_id,
             public_key_material=public_key_bytes,
+            private_key_material=private_key_bytes,
             status=KeyStatus.ACTIVE.value,
             created_at=datetime.now(timezone.utc),
         )

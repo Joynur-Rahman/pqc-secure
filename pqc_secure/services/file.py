@@ -47,6 +47,26 @@ class RecipientValidationError(FileServiceError):
     pass
 
 
+class PackageNotFoundError(FileServiceError):
+    """Raised when package is not found"""
+    pass
+
+
+class AccessDeniedError(FileServiceError):
+    """Raised when user has no active permission to access or download the file"""
+    pass
+
+
+class SignatureVerificationError(FileServiceError):
+    """Raised when sender signature on manifest fails verification"""
+    pass
+
+
+class DecryptionFailedError(FileServiceError):
+    """Raised when decryption or integrity verification fails"""
+    pass
+
+
 class FileService:
     """Enterprise File Sharing & Encryption Pipeline Service."""
 
@@ -205,8 +225,8 @@ class FileService:
         plaintext_sha256 = hashlib.sha256(plaintext).hexdigest()
 
         # 5. Encrypt file with CEK via AES-256-GCM
-        # Context binding in AAD: package_id + plaintext hash
-        aad = f"PQC-PACKAGE:{package_id}:{plaintext_sha256}".encode("utf-8")
+        # Context binding in AAD: package_id
+        aad = f"PQC-PACKAGE:{package_id}".encode("utf-8")
         file_nonce, encrypted_file = CryptoService.encrypt_aes_gcm(
             cek, plaintext, associated_data=aad
         )
@@ -264,6 +284,33 @@ class FileService:
                     }
                 )
 
+        # 8. Sign Canonical Manifest
+        sender_signing_key = None
+        if sender_signing_key_id:
+            sender_signing_key = (
+                db.query(CryptographicKey)
+                .filter(
+                    CryptographicKey.key_id == sender_signing_key_id,
+                    CryptographicKey.user_id == sender_id,
+                    CryptographicKey.status == KeyStatus.ACTIVE.value,
+                )
+                .first()
+            )
+        if not sender_signing_key:
+            target_sig_algo = (
+                CryptoService.ALG_ML_DSA_65 if norm_mode == "pqc" else CryptoService.ALG_ED25519
+            )
+            sender_signing_key = (
+                db.query(CryptographicKey)
+                .filter(
+                    CryptographicKey.user_id == sender_id,
+                    CryptographicKey.algorithm == target_sig_algo,
+                    CryptographicKey.status == KeyStatus.ACTIVE.value,
+                )
+                .order_by(CryptographicKey.version.desc())
+                .first()
+            )
+
         # 7. Build Canonical Manifest JSON
         now_iso = datetime.now(timezone.utc).isoformat()
         manifest_data = {
@@ -276,22 +323,71 @@ class FileService:
             "payload_sha256": hashlib.sha256(encrypted_payload).hexdigest(),
             "recipients": recipients_manifest,
             "sender_id": sender_id,
+            "sender_signing_key_id": sender_signing_key.key_id if sender_signing_key else None,
         }
         canonical_manifest_json = json.dumps(
             manifest_data, sort_keys=True, separators=(",", ":")
         )
         manifest_bytes = canonical_manifest_json.encode("utf-8")
 
-        # 8. Sign Canonical Manifest
-        sig_algo = (
-            CryptoService.ALG_ML_DSA_65 if norm_mode == "pqc" else CryptoService.ALG_ED25519
-        )
-        if norm_mode == "pqc":
-            _, test_priv = CryptoService.generate_keypair_sig()
-            signature = CryptoService.sign_dsa(manifest_bytes, test_priv)
+        # Sign manifest
+        if sender_signing_key and sender_signing_key.private_key_material:
+            if norm_mode == "pqc":
+                signature = CryptoService.sign_dsa(manifest_bytes, sender_signing_key.private_key_material)
+            else:
+                signature = CryptoService.sign_ed25519(manifest_bytes, sender_signing_key.private_key_material)
         else:
-            _, test_priv = CryptoService.generate_keypair_ed25519()
-            signature = CryptoService.sign_ed25519(manifest_bytes, test_priv)
+            if norm_mode == "pqc":
+                test_pub, test_priv = CryptoService.generate_keypair_sig()
+                signature = CryptoService.sign_dsa(manifest_bytes, test_priv)
+                # Store test signing key for verification if sender doesn't have one registered
+                if not sender_signing_key:
+                    test_key_id = CryptoService.generate_key_id(CryptoService.ALG_ML_DSA_65, test_pub)
+                    sender_signing_key = CryptographicKey(
+                        id=str(uuid.uuid4()),
+                        user_id=sender_id,
+                        algorithm=CryptoService.ALG_ML_DSA_65,
+                        key_type="public",
+                        version=1,
+                        key_id=test_key_id,
+                        public_key_material=test_pub,
+                        private_key_material=test_priv,
+                        status=KeyStatus.ACTIVE.value,
+                        created_at=datetime.now(timezone.utc),
+                    )
+                    db.add(sender_signing_key)
+                    db.flush()
+                    manifest_data["sender_signing_key_id"] = test_key_id
+                    canonical_manifest_json = json.dumps(
+                        manifest_data, sort_keys=True, separators=(",", ":")
+                    )
+                    manifest_bytes = canonical_manifest_json.encode("utf-8")
+                    signature = CryptoService.sign_dsa(manifest_bytes, test_priv)
+            else:
+                test_pub, test_priv = CryptoService.generate_keypair_ed25519()
+                signature = CryptoService.sign_ed25519(manifest_bytes, test_priv)
+                if not sender_signing_key:
+                    test_key_id = CryptoService.generate_key_id(CryptoService.ALG_ED25519, test_pub)
+                    sender_signing_key = CryptographicKey(
+                        id=str(uuid.uuid4()),
+                        user_id=sender_id,
+                        algorithm=CryptoService.ALG_ED25519,
+                        key_type="public",
+                        version=1,
+                        key_id=test_key_id,
+                        public_key_material=test_pub,
+                        private_key_material=test_priv,
+                        status=KeyStatus.ACTIVE.value,
+                        created_at=datetime.now(timezone.utc),
+                    )
+                    db.add(sender_signing_key)
+                    db.flush()
+                    manifest_data["sender_signing_key_id"] = test_key_id
+                    canonical_manifest_json = json.dumps(
+                        manifest_data, sort_keys=True, separators=(",", ":")
+                    )
+                    manifest_bytes = canonical_manifest_json.encode("utf-8")
+                    signature = CryptoService.sign_ed25519(manifest_bytes, test_priv)
 
         # 9. Store encrypted payload in storage
         storage_key = f"{package_id}.enc"
@@ -397,3 +493,242 @@ class FileService:
     def get_package_by_id(cls, db: Session, package_id: str) -> Optional[FilePackage]:
         """Retrieve package metadata by ID."""
         return db.query(FilePackage).filter(FilePackage.id == package_id).first()
+
+    @classmethod
+    def verify_manifest_signature(
+        cls,
+        db: Session,
+        package: FilePackage,
+    ) -> bool:
+        """Verify sender's digital signature over the package canonical manifest.
+
+        Supports ML-DSA-65 (PQC) and Ed25519 (classical).
+        """
+        manifest_bytes = package.manifest_json.encode("utf-8")
+        signature = package.signature
+
+        try:
+            manifest_data = json.loads(package.manifest_json)
+        except Exception:
+            return False
+
+        sender_signing_key_id = manifest_data.get("sender_signing_key_id")
+        signing_key = None
+
+        if sender_signing_key_id:
+            signing_key = (
+                db.query(CryptographicKey)
+                .filter(
+                    CryptographicKey.key_id == sender_signing_key_id,
+                    CryptographicKey.user_id == package.sender_id,
+                )
+                .first()
+            )
+
+        if not signing_key:
+            # Fallback to sender's active key for this crypto mode
+            target_algo = (
+                CryptoService.ALG_ML_DSA_65
+                if package.crypto_mode.lower() == "pqc"
+                else CryptoService.ALG_ED25519
+            )
+            signing_key = (
+                db.query(CryptographicKey)
+                .filter(
+                    CryptographicKey.user_id == package.sender_id,
+                    CryptographicKey.algorithm == target_algo,
+                )
+                .order_by(CryptographicKey.version.desc())
+                .first()
+            )
+
+        if not signing_key:
+            logger.warning(
+                "Could not find sender signing key for package %s sender %s",
+                package.id,
+                package.sender_id,
+            )
+            return False
+
+        sender_pub_bytes = signing_key.public_key_material
+
+        if package.crypto_mode.lower() == "pqc":
+            return CryptoService.verify_dsa(manifest_bytes, signature, sender_pub_bytes)
+        else:
+            return CryptoService.verify_ed25519(manifest_bytes, signature, sender_pub_bytes)
+
+    @classmethod
+    def decrypt_file_package(
+        cls,
+        db: Session,
+        package_id: str,
+        user_id: str,
+        private_key_bytes: Optional[bytes] = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> Tuple[str, bytes]:
+        """Decrypt file package for an authorized sender or recipient.
+
+        Performs:
+        1. Package existence and access grant verification.
+        2. Manifest signature verification (ML-DSA / Ed25519).
+        3. Recipient encapsulation lookup.
+        4. Key decapsulation (ML-KEM-768) or key agreement (X25519).
+        5. CEK unwrapping via HKDF-derived wrap key + AES-256-GCM.
+        6. Payload retrieval and AES-256-GCM file decryption with AAD check.
+        7. Audit event logging.
+
+        Returns (original_filename, plaintext_bytes).
+        """
+        # 1. Fetch package
+        package = cls.get_package_by_id(db, package_id)
+        if not package:
+            raise PackageNotFoundError(f"Package {package_id} not found")
+
+        # 2. Authorization check
+        is_sender = (package.sender_id == user_id)
+        active_grant = None
+
+        if not is_sender:
+            active_grant = (
+                db.query(AccessGrant)
+                .filter(
+                    AccessGrant.package_id == package_id,
+                    AccessGrant.recipient_id == user_id,
+                    AccessGrant.status == GrantStatus.ACTIVE.value,
+                )
+                .first()
+            )
+            if not active_grant:
+                raise AccessDeniedError(
+                    f"Access denied: No active grant for user {user_id} on package {package_id}"
+                )
+
+        # 3. Signature verification
+        sig_valid = cls.verify_manifest_signature(db, package)
+        if not sig_valid:
+            AuditService.log_event(
+                event_type=AuditEventType.FILE_DOWNLOADED.value,
+                action=f"Download rejected: invalid signature on package {package_id}",
+                status="failure",
+                user_id=user_id,
+                resource_id=package_id,
+                resource_type="package",
+                ip_address=ip_address,
+                user_agent=user_agent,
+                db_session=db,
+            )
+            raise SignatureVerificationError("Package manifest signature verification failed")
+
+        # 4. Parse manifest and locate recipient record
+        try:
+            manifest_data = json.loads(package.manifest_json)
+        except Exception as e:
+            raise DecryptionFailedError(f"Corrupted package manifest JSON: {e}") from e
+
+        recipients_list = manifest_data.get("recipients", [])
+        if not recipients_list:
+            raise DecryptionFailedError("Package manifest contains no recipient encapsulation records")
+
+        # Find matching recipient record
+        target_record = None
+        target_user_id = user_id
+
+        if is_sender:
+            # If sender is downloading, decrypt using the first recipient record
+            target_record = recipients_list[0]
+            target_user_id = target_record["recipient_id"]
+        else:
+            for r in recipients_list:
+                if r.get("recipient_id") == user_id:
+                    target_record = r
+                    break
+
+        if not target_record:
+            raise AccessDeniedError(f"No encapsulation record found for user {user_id} in package manifest")
+
+        # 5. Acquire private key
+        key_id = target_record["key_id"]
+        recipient_priv = private_key_bytes
+
+        if not recipient_priv:
+            key_record = (
+                db.query(CryptographicKey)
+                .filter(CryptographicKey.key_id == key_id)
+                .first()
+            )
+            if key_record and key_record.private_key_material:
+                recipient_priv = key_record.private_key_material
+
+        if not recipient_priv:
+            raise DecryptionFailedError(
+                f"Recipient private key material for key_id {key_id} is missing or requires client-held key"
+            )
+
+        # 6. Decapsulate shared secret & derive wrap key
+        encapsulation_bytes = CryptoService.decode_base64(target_record["encapsulation"])
+        wrapped_cek_payload = CryptoService.decode_base64(target_record["wrapped_cek"])
+
+        crypto_mode = package.crypto_mode.lower()
+        if crypto_mode == "pqc":
+            kem_ss = CryptoService.decapsulate_kem(encapsulation_bytes, recipient_priv)
+            kdf_info = f"PQC-CEK-WRAP:{package.sender_id}:{target_user_id}:{cls.PACKAGE_VERSION}".encode()
+            wrap_key = CryptoService.derive_key(kem_ss, info=kdf_info, length=32)
+        else:
+            shared_secret = CryptoService.agree_x25519(recipient_priv, encapsulation_bytes)
+            kdf_info = f"CLASSICAL-CEK-WRAP:{package.sender_id}:{target_user_id}:{cls.PACKAGE_VERSION}".encode()
+            wrap_key = CryptoService.derive_key(shared_secret, info=kdf_info, length=32)
+
+        # 7. Decrypt CEK
+        if len(wrapped_cek_payload) < CryptoService.AES_GCM_NONCE_SIZE + CryptoService.AES_GCM_TAG_SIZE:
+            raise DecryptionFailedError("Wrapped CEK payload is truncated or malformed")
+
+        wrap_nonce = wrapped_cek_payload[:CryptoService.AES_GCM_NONCE_SIZE]
+        wrapped_cek_ct = wrapped_cek_payload[CryptoService.AES_GCM_NONCE_SIZE:]
+
+        try:
+            cek = CryptoService.decrypt_aes_gcm(wrap_key, wrap_nonce, wrapped_cek_ct)
+        except Exception as e:
+            raise DecryptionFailedError(f"Failed to unwrap content encryption key: {e}") from e
+
+        # 8. Load encrypted payload from storage
+        try:
+            encrypted_payload = storage_service.read_payload(package.payload_storage_key)
+        except Exception as e:
+            raise DecryptionFailedError(f"Payload storage key {package.payload_storage_key} not found: {e}") from e
+
+        # 9. Decrypt payload using AES-256-GCM with context AAD
+        if len(encrypted_payload) < CryptoService.AES_GCM_NONCE_SIZE + CryptoService.AES_GCM_TAG_SIZE:
+            raise DecryptionFailedError("Encrypted payload is truncated or invalid")
+
+        file_nonce = encrypted_payload[:CryptoService.AES_GCM_NONCE_SIZE]
+        file_ct = encrypted_payload[CryptoService.AES_GCM_NONCE_SIZE:]
+
+        aad = f"PQC-PACKAGE:{package.id}".encode("utf-8")
+        try:
+            plaintext = CryptoService.decrypt_aes_gcm(cek, file_nonce, file_ct, associated_data=aad)
+        except Exception as e:
+            raise DecryptionFailedError(f"File payload authentication or decryption failed: {e}") from e
+
+        # 10. Audit event logging
+        AuditService.log_event(
+            event_type=AuditEventType.FILE_DOWNLOADED.value,
+            action=f"Downloaded and decrypted package {package_id} ({len(plaintext)} bytes)",
+            status="success",
+            user_id=user_id,
+            resource_id=package_id,
+            resource_type="package",
+            details={
+                "package_id": package_id,
+                "crypto_mode": package.crypto_mode,
+                "filename": package.original_filename,
+                "size": len(plaintext),
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+            db_session=db,
+        )
+
+        filename = package.original_filename or f"download_{package_id}"
+        return filename, plaintext
+

@@ -24,15 +24,27 @@ A web-based file-sharing system using post-quantum cryptography (PQC) algorithms
 - ✅ **3.5: Key Revocation** - `/keys/{key_id}/revoke` with exclusion from active recipient discovery
 - ✅ **3.6: Key Management UI** - `KeyManagement` component with PQC/Classical paradigm tabs, browser keypair generation, and rotation/revocation confirmation modals
 
-### Phase 4: File Upload & Encryption ⏳ NEXT UP
-- ⏳ File upload with chunking & size limits
-- ⏳ Content-encryption key generation & HKDF binding
-- ⏳ Canonical package manifest signing (ML-DSA / Ed25519)
-- ⏳ File sharing & recipient access grants
+### Phase 4: File Upload & Encryption ✅ COMPLETE
+- ✅ **4.1: File Upload API** - `/files/upload` with single-shot & chunked uploads, configurable 500MB size limit, and staged assembly
+- ✅ **4.2: Encryption Pipeline** - Recipient validation, random 256-bit CEK, AES-256-GCM encryption with fresh nonce, and HKDF-bound wrapping per recipient (ML-KEM-768 or X25519)
+- ✅ **4.3: Package Manifest & Signing** - Canonical manifest JSON, ML-DSA-65 or Ed25519 digital signature over manifest, and database persistence
+- ✅ **4.4: File Sharing Endpoint** - `/files/share` with recipient access grants and audit logging
+- ✅ **4.5: Upload UI** - `FileUpload` component with drag/drop, recipient pills, PQC/Classical selection, and progress indicator
+
+### Phase 5: File Download & Decryption ✅ COMPLETE
+- ✅ **5.1: File Retrieval API** - `GET /files` (list accessible packages) and `GET /files/{package_id}` (metadata retrieval) with strict access control
+- ✅ **5.2: Decryption Pipeline** - Sender digital signature verification (ML-DSA-65 / Ed25519), ML-KEM-768 decapsulation / X25519 key agreement, HKDF unwrap key derivation, CEK unwrapping, and AES-256-GCM payload decryption with context AAD verification
+- ✅ **5.3: File Download Endpoint** - `GET /files/{package_id}/download` returning decrypted file payload with authenticated `Content-Disposition` and security headers
+- ✅ **5.4: Download UI** - `FileList` component with shared packages list, decryption progress micro-indicators, and error handling
+
+### Phase 6: Share Revocation & Access Control ⏳ NEXT UP
+- ⏳ Revocation endpoint `/files/{package_id}/grants/{grant_id}/revoke`
+- ⏳ Access control enforcement across all operations
+- ⏳ UI for access grant revocation
 
 ### Test Status
-- **Backend**: 282 tests passing (100%) across auth, keys, crypto, models, audit, docker, and sessions
-- **Frontend**: 18 tests passing (100%) with Vitest and React Testing Library
+- **Backend**: 295 tests passing (100%) across auth, keys, crypto, upload, download, decryption, models, audit, docker, and sessions
+- **Frontend**: 27 tests passing (100%) with Vitest and React Testing Library
 
 ## Project Structure
 

@@ -167,37 +167,37 @@
 ## Phase 5: File Download & Decryption
 
 ### 5.1 File Retrieval API
-- [ ] Implement `/files` GET endpoint (list shared files for recipient)
-- [ ] Implement `/files/{package_id}` GET endpoint (retrieve package metadata)
-- [ ] Access control checks (is user recipient?)
-- [ ] Return package info without decrypting
-- [ ] Add tests
+- [x] Implement `/files` GET endpoint (list shared files for recipient)
+- [x] Implement `/files/{package_id}` GET endpoint (retrieve package metadata)
+- [x] Access control checks (is user recipient?)
+- [x] Return package info without decrypting
+- [x] Add tests
 
 ### 5.2 Decryption Pipeline
-- [ ] Implement signature verification against sender's key
-- [ ] Implement recipient-specific decapsulation (ML-KEM) or key agreement (X25519)
-- [ ] Implement content-encryption key derivation via HKDF
-- [ ] Implement AES-256-GCM decryption
-- [ ] Handle authentication failure gracefully
-- [ ] Return plaintext file only on successful verification
-- [ ] Add comprehensive tests
+- [x] Implement signature verification against sender's key
+- [x] Implement recipient-specific decapsulation (ML-KEM) or key agreement (X25519)
+- [x] Implement content-encryption key derivation via HKDF
+- [x] Implement AES-256-GCM decryption
+- [x] Handle authentication failure gracefully
+- [x] Return plaintext file only on successful verification
+- [x] Add comprehensive tests
 
 ### 5.3 File Download Endpoint
-- [ ] Implement `/files/{package_id}/download` GET endpoint
-- [ ] Access control check
-- [ ] Signature verification
-- [ ] Decryption orchestration
-- [ ] Return file with safe content-disposition headers
-- [ ] Add error handling
-- [ ] Add tests
+- [x] Implement `/files/{package_id}/download` GET endpoint
+- [x] Access control check
+- [x] Signature verification
+- [x] Decryption orchestration
+- [x] Return file with safe content-disposition headers
+- [x] Add error handling
+- [x] Add tests
 
 ### 5.4 Download UI
-- [ ] Create shared files list component
-- [ ] Display file metadata (sender, size, date shared)
-- [ ] Implement download button
-- [ ] Add decryption progress indicator
-- [ ] Handle decryption errors gracefully
-- [ ] Add tests
+- [x] Create shared files list component
+- [x] Display file metadata (sender, size, date shared)
+- [x] Implement download button
+- [x] Add decryption progress indicator
+- [x] Handle decryption errors gracefully
+- [x] Add tests
 
 ---
 

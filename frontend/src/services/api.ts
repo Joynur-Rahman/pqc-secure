@@ -155,10 +155,36 @@ export const fileService = {
     apiRequest<{ packages: FilePackageMetadata[]; total: number }>('/files'),
   getPackage: (packageId: string) =>
     apiRequest<FilePackage>(`/files/${packageId}`),
-  download: (packageId: string) =>
-    apiRequest<Blob>(`/files/${packageId}/download`, {
-      headers: { Accept: 'application/octet-stream' },
-    }),
+  download: async (packageId: string): Promise<{ blob?: Blob; filename?: string; error?: string }> => {
+    const url = `${API_BASE_URL}/files/${packageId}/download`
+    const token = typeof window !== 'undefined' ? localStorage.getItem('session_token') : null
+
+    try {
+      const response = await fetchWithTimeout(url, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.detail || err.message || `Download failed: ${response.status}`)
+      }
+
+      const disposition = response.headers.get('Content-Disposition') || ''
+      let filename = 'downloaded_file'
+      const filenameMatch = disposition.match(/filename="?([^";]+)"?/i)
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1]
+      }
+
+      const blob = await response.blob()
+      return { blob, filename }
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Download failed' }
+    }
+  },
   revokeGrant: (packageId: string, grantId: string) =>
     apiRequest<void>(`/files/${packageId}/grants/${grantId}/revoke`, {
       method: 'POST',

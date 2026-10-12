@@ -12,6 +12,7 @@ from fastapi import (
     Form,
     HTTPException,
     Request,
+    Response,
     UploadFile,
     status,
 )
@@ -27,10 +28,14 @@ from pqc_secure.schemas.files import (
     RecipientInfo,
 )
 from pqc_secure.services.file import (
+    AccessDeniedError,
+    DecryptionFailedError,
     FileService,
     FileServiceError,
     FileUploadError,
+    PackageNotFoundError,
     RecipientValidationError,
+    SignatureVerificationError,
 )
 
 router = APIRouter(prefix="/files", tags=["files"])
@@ -192,3 +197,55 @@ async def get_file_metadata(
             )
 
     return _format_package_response(package, db)
+
+
+@router.get("/{package_id}/download")
+async def download_file(
+    package_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Decrypt and download shared file package with access control and signature verification."""
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    try:
+        filename, plaintext_bytes = FileService.decrypt_file_package(
+            db=db,
+            package_id=package_id,
+            user_id=current_user.id,
+            ip_address=client_ip,
+            user_agent=user_agent,
+        )
+
+        safe_filename = filename.replace('"', "").replace("\r", "").replace("\n", "")
+        headers = {
+            "Content-Disposition": f'attachment; filename="{safe_filename}"',
+            "Content-Type": "application/octet-stream",
+            "Content-Length": str(len(plaintext_bytes)),
+            "X-PQC-Decryption-Status": "verified",
+        }
+
+        return Response(content=plaintext_bytes, headers=headers, media_type="application/octet-stream")
+
+    except PackageNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except AccessDeniedError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except SignatureVerificationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Security alert: Package signature failed verification. File may be tampered.",
+        )
+    except DecryptionFailedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Decryption failed: {str(e)}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Download service error: {str(e)}",
+        )
+
