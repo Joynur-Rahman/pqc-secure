@@ -54,8 +54,12 @@ class AuditService:
         
         # Check if category is in enabled events
         if enabled_events and enabled_events != ['']:
+            lower_enabled = [e.lower() for e in enabled_events]
+            auth_events = {"user_login", "user_logout", "login_failed", "registration_failed", "user_registered"}
+            is_auth_event = (event_type.lower() in auth_events) and ("auth" in lower_enabled)
+            
             # Check if this event's category is enabled
-            category_enabled = any(
+            category_enabled = is_auth_event or any(
                 event_category == enabled_event.lower() or 
                 enabled_event.lower() in event_type.lower()
                 for enabled_event in enabled_events

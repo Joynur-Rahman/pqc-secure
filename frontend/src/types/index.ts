@@ -1,15 +1,26 @@
 export interface User {
   id: string
   email: string
-  createdAt: string
-  updatedAt: string
-  accountStatus: 'active' | 'suspended' | 'deleted'
+  createdAt?: string
+  created_at?: string
+  updatedAt?: string
+  updated_at?: string
+  accountStatus?: 'active' | 'suspended' | 'deleted' | string
+  account_status?: 'active' | 'suspended' | 'deleted' | string
 }
 
 export interface AuthSession {
-  token: string
+  token?: string
+  session_token?: string
   user: User
-  expiresAt: string
+  expiresAt?: string
+}
+
+export interface LoginResponse {
+  id: string
+  email: string
+  account_status: string
+  session_token: string
 }
 
 export interface CryptographicKey {

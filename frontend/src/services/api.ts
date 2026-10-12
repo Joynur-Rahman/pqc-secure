@@ -1,7 +1,9 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+import { User, LoginResponse } from '../types'
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10)
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   data?: T
   error?: string
   message?: string
@@ -22,8 +24,11 @@ function fetchWithTimeout<T>(url: string, init?: RequestInit): Promise<Response>
 
 export async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
+  const token = typeof window !== 'undefined' ? localStorage.getItem('session_token') : null
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...((options?.headers as Record<string, string>) || {}),
   }
 
@@ -36,7 +41,13 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `API error: ${response.status}`)
+      let msg = errorData.detail || errorData.message || `API error: ${response.status}`
+      if (Array.isArray(msg)) {
+        msg = msg.map((m: any) => m.msg || JSON.stringify(m)).join(', ')
+      } else if (typeof msg === 'object') {
+        msg = JSON.stringify(msg)
+      }
+      throw new Error(msg)
     }
 
     return { data: await response.json() }
@@ -49,17 +60,28 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
 
 export const authService = {
   register: (email: string, password: string) =>
-    apiRequest<{ userId: string }>('/auth/register', {
+    apiRequest<LoginResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
-  login: (email: string, password: string) =>
-    apiRequest<AuthSession>('/auth/login', {
+  login: async (email: string, password: string) => {
+    const res = await apiRequest<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
-    }),
-  logout: () => apiRequest<void>('/auth/logout', { method: 'POST' }),
-  getSession: () => apiRequest<AuthSession>('/auth/session'),
+    })
+    if (res.data?.session_token && typeof window !== 'undefined') {
+      localStorage.setItem('session_token', res.data.session_token)
+    }
+    return res
+  },
+  logout: async () => {
+    const res = await apiRequest<{ message: string }>('/auth/logout', { method: 'POST' })
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('session_token')
+    }
+    return res
+  },
+  getSession: () => apiRequest<User>('/auth/me'),
 }
 
 export const keyService = {

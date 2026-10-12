@@ -1,7 +1,7 @@
 """Authentication service"""
 import re
-from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import jwt
@@ -156,16 +156,37 @@ class AuthService:
         if expires_in_minutes is None:
             expires_in_minutes = settings.access_token_expire_minutes
         
-        expire_time = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+        now = datetime.now(timezone.utc)
+        expire_time = now + timedelta(minutes=expires_in_minutes)
         payload = {
-            "sub": user_id,
+            "sub": str(user_id),
             "exp": expire_time,
-            "iat": datetime.utcnow()
+            "iat": now
         }
         
         token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
         return token
     
+    def decode_token(self, token: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
+        """
+        Decode and validate a JWT token.
+        
+        Args:
+            token: JWT token to decode
+            
+        Returns:
+            Tuple of (is_valid, payload, error_message)
+        """
+        try:
+            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+            return True, payload, None
+        except jwt.ExpiredSignatureError:
+            logger.info("Token expired")
+            return False, None, "Token has expired"
+        except jwt.InvalidTokenError:
+            logger.info("Invalid token")
+            return False, None, "Could not validate credentials"
+
     def verify_token(self, token: str) -> Optional[str]:
         """
         Verify a JWT token and extract user ID.
@@ -176,15 +197,10 @@ class AuthService:
         Returns:
             User ID if valid, None otherwise
         """
-        try:
-            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        valid, payload, _ = self.decode_token(token)
+        if valid and payload:
             return payload.get("sub")
-        except jwt.ExpiredSignatureError:
-            logger.info("Token expired")
-            return None
-        except jwt.InvalidTokenError:
-            logger.info("Invalid token")
-            return None
+        return None
     
     def register_user(self, db: Session, email: str, password: str) -> Tuple[bool, Optional[object], Optional[str]]:
         """
