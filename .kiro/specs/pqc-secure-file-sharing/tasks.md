@@ -67,52 +67,52 @@
 ## Phase 3: Cryptographic Key Management
 
 ### 3.1 Cryptographic Service Layer
-- [ ] Implement ML-KEM-768 key generation and encapsulation
-- [ ] Implement ML-DSA-65 signature generation and verification
-- [ ] Implement X25519 key generation and key agreement
-- [ ] Implement Ed25519 signature generation and verification
-- [ ] Implement HKDF-SHA-256 for key derivation
-- [ ] Implement AES-256-GCM encryption and decryption
-- [ ] Create utility functions for key encoding/decoding
-- [ ] Add comprehensive unit tests for each algorithm
+- [x] Implement ML-KEM-768 key generation and encapsulation
+- [x] Implement ML-DSA-65 signature generation and verification
+- [x] Implement X25519 key generation and key agreement
+- [x] Implement Ed25519 signature generation and verification
+- [x] Implement HKDF-SHA-256 for key derivation
+- [x] Implement AES-256-GCM encryption and decryption
+- [x] Create utility functions for key encoding/decoding
+- [x] Add comprehensive unit tests for each algorithm
 
 ### 3.2 Key Registration API
-- [ ] Implement `/keys/register` POST endpoint
-- [ ] Validate public key format and size
-- [ ] Generate key ID (canonical identifier)
-- [ ] Store public key with algorithm and version metadata
-- [ ] Support multiple key versions per user
-- [ ] Return key registration confirmation
-- [ ] Add tests
+- [x] Implement `/keys/register` POST endpoint
+- [x] Validate public key format and size
+- [x] Generate key ID (canonical identifier)
+- [x] Store public key with algorithm and version metadata
+- [x] Support multiple key versions per user
+- [x] Return key registration confirmation
+- [x] Add tests
 
 ### 3.3 Key Retrieval & Discovery
-- [ ] Implement `/keys/my-keys` GET endpoint (list user's keys)
-- [ ] Implement `/keys/{key_id}` GET endpoint (retrieve public key)
-- [ ] Implement `/keys/user/{user_id}` GET endpoint (discover user's public keys)
-- [ ] Validate authorization for key retrieval
-- [ ] Add tests
+- [x] Implement `/keys/my-keys` GET endpoint (list user's keys)
+- [x] Implement `/keys/{key_id}` GET endpoint (retrieve public key)
+- [x] Implement `/keys/user/{user_id}` GET endpoint (discover user's public keys)
+- [x] Validate authorization for key retrieval
+- [x] Add tests
 
 ### 3.4 Key Rotation
-- [ ] Implement `/keys/{key_id}/rotate` POST endpoint
-- [ ] Generate new key version
-- [ ] Mark old version as superseded
-- [ ] Update key status
-- [ ] Ensure old packages remain accessible
-- [ ] Add tests
+- [x] Implement `/keys/{key_id}/rotate` POST endpoint
+- [x] Generate new key version
+- [x] Mark old version as superseded
+- [x] Update key status
+- [x] Ensure old packages remain accessible
+- [x] Add tests
 
 ### 3.5 Key Revocation
-- [ ] Implement `/keys/{key_id}/revoke` POST endpoint
-- [ ] Mark key as revoked
-- [ ] Prevent revoked keys from being selected for new shares
-- [ ] Add tests
+- [x] Implement `/keys/{key_id}/revoke` POST endpoint
+- [x] Mark key as revoked
+- [x] Prevent revoked keys from being selected for new shares
+- [x] Add tests
 
 ### 3.6 Key Management UI
-- [ ] Create key registration form (PQC and classical modes)
-- [ ] Create key list component
-- [ ] Create key rotation interface
-- [ ] Create key revocation interface
-- [ ] Add confirmation dialogs
-- [ ] Add tests
+- [x] Create key registration form (PQC and classical modes)
+- [x] Create key list component
+- [x] Create key rotation interface
+- [x] Create key revocation interface
+- [x] Add confirmation dialogs
+- [x] Add tests
 
 ---
 

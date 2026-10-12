@@ -8,6 +8,7 @@ from pqc_secure.db.session import get_db_session
 from pqc_secure.db.models import User
 from pqc_secure.services.auth import AuthService
 
+get_db = get_db_session
 auth_service = AuthService()
 bearer_scheme = HTTPBearer(auto_error=False)
 
