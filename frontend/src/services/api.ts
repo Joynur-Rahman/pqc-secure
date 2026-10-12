@@ -85,16 +85,36 @@ export const authService = {
 }
 
 export const keyService = {
-  register: (algorithm: string, publicKey: string) =>
+  register: (algorithm: string, publicKeyMaterial: string) =>
     apiRequest<CryptographicKey>('/keys/register', {
       method: 'POST',
-      body: JSON.stringify({ algorithm, publicKey }),
+      body: JSON.stringify({
+        algorithm,
+        public_key_material: publicKeyMaterial,
+      }),
     }),
-  getMyKeys: () => apiRequest<CryptographicKey[]>('/keys/my-keys'),
+  getMyKeys: (includeInactive = true) =>
+    apiRequest<KeyListResponse>(`/keys/my-keys?include_inactive=${includeInactive}`),
   getKeyById: (keyId: string) => apiRequest<CryptographicKey>(`/keys/${keyId}`),
-  getUserKeys: (userId: string) => apiRequest<CryptographicKey[]>(`/keys/user/${userId}`),
-  rotateKey: (keyId: string) => apiRequest<CryptographicKey>(`/keys/${keyId}/rotate`, { method: 'POST' }),
-  revokeKey: (keyId: string) => apiRequest<void>(`/keys/${keyId}/revoke`, { method: 'POST' }),
+  getUserKeys: (userId: string, algorithm?: string) =>
+    apiRequest<KeyListResponse>(
+      `/keys/user/${userId}${algorithm ? `?algorithm=${algorithm}` : ''}`
+    ),
+  rotateKey: (keyId: string, newPublicKeyMaterial?: string) =>
+    apiRequest<CryptographicKey>(`/keys/${keyId}/rotate`, {
+      method: 'POST',
+      body: JSON.stringify({
+        public_key_material: newPublicKeyMaterial || null,
+      }),
+    }),
+  revokeKey: (keyId: string, reason?: string) =>
+    apiRequest<{ key_id: string; status: string; message: string }>(
+      `/keys/${keyId}/revoke`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ reason: reason || null }),
+      }
+    ),
 }
 
 export const fileService = {

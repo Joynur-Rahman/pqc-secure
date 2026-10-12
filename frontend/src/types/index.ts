@@ -25,14 +25,24 @@ export interface LoginResponse {
 
 export interface CryptographicKey {
   id: string
-  userId: string
-  algorithm: 'ml-kem-768' | 'ml-dsa-65' | 'x25519' | 'ed25519'
-  keyType: 'public' | 'private'
+  key_id?: string
+  keyId?: string
+  user_id?: string
+  userId?: string
+  algorithm: 'ml-kem-768' | 'ml-dsa-65' | 'x25519' | 'ed25519' | string
+  key_type?: 'public' | 'private' | string
+  keyType?: 'public' | 'private' | string
   version: number
-  publicKeyMaterial: string
-  keyId: string
-  createdAt: string
-  status: 'active' | 'revoked'
+  public_key_material?: string
+  publicKeyMaterial?: string
+  created_at?: string
+  createdAt?: string
+  status: 'active' | 'revoked' | 'superseded' | string
+}
+
+export interface KeyListResponse {
+  keys: CryptographicKey[]
+  total: number
 }
 
 export interface FilePackage {
