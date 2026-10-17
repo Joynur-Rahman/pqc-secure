@@ -19,7 +19,8 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from pqc_secure.api.deps import get_current_active_user, get_db
-from pqc_secure.db.models import AccessGrant, FilePackage, GrantStatus, User
+from pqc_secure.db.models import AccessGrant, AuditEventType, FilePackage, GrantStatus, User
+from pqc_secure.services.audit import AuditService
 from pqc_secure.schemas.files import (
     AccessGrantResponse,
     AccessGrantRevokeResponse,
@@ -157,11 +158,31 @@ async def share_file(
             user_agent=user_agent,
         )
         return _format_package_response(package, db)
-    except (FileUploadError, RecipientValidationError, ValueError) as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except FileServiceError as e:
+    except (FileUploadError, RecipientValidationError, ValueError, FileServiceError) as e:
+        AuditService.log_event(
+            event_type=AuditEventType.FILE_SHARED.value,
+            action=f"File sharing rejected: {str(e)}",
+            status="failure",
+            user_id=current_user.id,
+            resource_type="file",
+            details={"error": str(e), "upload_id": body.upload_id},
+            ip_address=client_ip,
+            user_agent=user_agent,
+            db_session=db,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
+        AuditService.log_event(
+            event_type=AuditEventType.FILE_SHARED.value,
+            action=f"File sharing pipeline error: {str(e)}",
+            status="failure",
+            user_id=current_user.id,
+            resource_type="file",
+            details={"error": str(e), "upload_id": body.upload_id},
+            ip_address=client_ip,
+            user_agent=user_agent,
+            db_session=db,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"File sharing pipeline error: {str(e)}",
@@ -340,6 +361,15 @@ async def list_package_grants(
     except ACPackageNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except UnauthorizedRevocationError as e:
+        AuditService.log_event(
+            event_type=AuditEventType.PERMISSION_DENIED.value,
+            action=f"Unauthorized access to view grants for package {package_id}",
+            status="failure",
+            user_id=current_user.id,
+            resource_id=package_id,
+            resource_type="package",
+            db_session=db,
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
 
 

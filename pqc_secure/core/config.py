@@ -95,6 +95,12 @@ class Settings(BaseSettings):
     session_cookie_httponly: bool = Field(default=True, description="Make cookies HTTP only")
     session_cookie_samesite: str = Field(default="lax", description="SameSite cookie attribute: strict, lax, or none")
     
+    # Admin Configuration
+    admin_emails: str = Field(
+        default="admin@example.com,admin@pqcsecure.local",
+        description="Comma-separated list of admin email addresses"
+    )
+
     def get_allowed_origins_list(self) -> list:
         """Parse allowed origins from comma-separated string"""
         return [origin.strip() for origin in self.allowed_origins.split(",")]
@@ -102,6 +108,10 @@ class Settings(BaseSettings):
     def get_audit_log_events(self) -> list:
         """Parse audit log events from comma-separated string"""
         return [event.strip() for event in self.audit_log_events.split(",")]
+
+    def get_admin_emails_list(self) -> list:
+        """Parse admin emails from comma-separated string"""
+        return [email.strip().lower() for email in self.admin_emails.split(",") if email.strip()]
     
     def is_production(self) -> bool:
         """Check if running in production environment"""

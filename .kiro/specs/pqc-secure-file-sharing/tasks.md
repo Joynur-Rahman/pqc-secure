@@ -229,19 +229,19 @@
 ## Phase 7: Audit Logging
 
 ### 7.1 Audit Service
-- [ ] Implement audit event creation and storage
-- [ ] Log authentication events (login, logout, registration failures)
-- [ ] Log permission denials and access attempts
-- [ ] Log cryptographic verification failures
-- [ ] Log upload/download outcomes
-- [ ] Exclude secrets and plaintext from all logs
-- [ ] Add tests
+- [x] Implement audit event creation and storage
+- [x] Log authentication events (login, logout, registration failures)
+- [x] Log permission denials and access attempts
+- [x] Log cryptographic verification failures
+- [x] Log upload/download outcomes
+- [x] Exclude secrets and plaintext from all logs
+- [x] Add tests
 
 ### 7.2 Audit Log API
-- [ ] Implement `/audit-logs` GET endpoint (admin/self-access)
-- [ ] Implement filtering by event type, user, date range
-- [ ] Add pagination
-- [ ] Add tests
+- [x] Implement `/audit-logs` GET endpoint (admin/self-access)
+- [x] Implement filtering by event type, user, date range
+- [x] Add pagination
+- [x] Add tests
 
 ---
 

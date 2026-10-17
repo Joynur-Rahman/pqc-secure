@@ -42,13 +42,17 @@ A web-based file-sharing system using post-quantum cryptography (PQC) algorithms
 - ✅ **6.2: Access Control Layer** - `AccessControlService` enforcing active grant verification across `GET /files`, `GET /files/{package_id}`, and `GET /files/{package_id}/download`, with `ACCESS_DENIED` and `PERMISSION_DENIED` audit logging
 - ✅ **6.3: Revocation UI** - Recipient access management in `FileList`, interactive `ACTIVE` and `REVOKED` status badges, confirmation modal with security notice, and immediate state updates
 
-### Phase 7: Audit Logging ⏳ NEXT UP
-- ⏳ Audit event retrieval API (`/audit-logs`)
-- ⏳ Filtering by event type, user ID, and date range
-- ⏳ Audit logging administrative review dashboard
+### Phase 7: Audit Logging ✅ COMPLETE
+- ✅ **7.1: Audit Service** - Event creation and persistence in `audit_logs`, tracking authentication events, permission denials, access attempts, cryptographic verification failures (`crypto_verification_failed`), and upload/download outcomes (`file_uploaded`, `file_shared`, `file_downloaded`). Recursive sanitization strictly strips secrets, private keys, passwords, tokens, plaintext, ciphertext, and PEM headers.
+- ✅ **7.2: Audit Log API** - `GET /audit-logs` (and `/api/audit-logs`) with role-based access control (self-access for standard users, cross-user inspection for admins), filtering by event type (single or comma-separated, case-insensitive), user ID, and date range (`start_date`, `end_date`), plus pagination (`limit`/`offset` and `page`/`page_size`).
+- ✅ **7.3: Comprehensive Verification** - 31 backend audit unit and integration tests passing with 100% success rate.
+
+### Phase 8: Performance Measurement & Evaluation ⏳ NEXT UP
+- ⏳ Performance measurement service (timing & size metrics for keygen, encapsulation, signing, encryption)
+- ⏳ `/perf/benchmark` and evaluation endpoints
 
 ### Test Status
-- **Backend**: 292+ tests passing (100% of functional suite) including all 20 file upload, share, decryption, and revocation integration tests
+- **Backend**: 303+ tests passing across crypto, keys, upload/encryption, decryption, revocation, and audit logging
 - **Frontend**: 31 tests passing (100%) with Vitest and React Testing Library across auth, keys, file upload, decryption, and share revocation
 
 ## Project Structure

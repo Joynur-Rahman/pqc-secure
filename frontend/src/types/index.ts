@@ -70,8 +70,21 @@ export interface FilePackageMetadata {
 export interface AuditLog {
   id: string
   eventType: string
+  action?: string
+  status?: string
   userId?: string
   userEmail?: string
+  resourceId?: string
+  resourceType?: string
   timestamp: string
-  details: Record<string, unknown>
+  details?: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
+}
+
+export interface AuditLogsResponse {
+  logs: AuditLog[]
+  total: number
+  limit: number
+  offset: number
 }
