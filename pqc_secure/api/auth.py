@@ -70,13 +70,22 @@ async def register(
             detail="Too many registration attempts. Please try again later."
         )
     
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
     try:
         # Register user
         success, user, error_msg = auth_service.register_user(db, request.email, request.password)
         
         if not success:
             # Log failed registration
-            await log_registration_failure(request.email, error_msg, db)
+            await log_registration_failure(
+                email=request.email,
+                reason=error_msg,
+                db_session=db,
+                ip_address=client_ip,
+                user_agent=user_agent,
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=error_msg or "Registration failed"
@@ -89,7 +98,12 @@ async def register(
         set_session_cookie(response, session_token)
         
         # Log successful registration
-        await log_user_registered(user.id, db)
+        await log_user_registered(
+            user_id=user.id,
+            db_session=db,
+            ip_address=client_ip,
+            user_agent=user_agent,
+        )
         
         return UserRegisterResponse(
             id=user.id,
@@ -129,6 +143,9 @@ async def login(
             detail="Too many login attempts. Please try again later."
         )
     
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
     try:
         success, user, error_msg = auth_service.authenticate_user(db, request.email, request.password)
         
@@ -137,7 +154,8 @@ async def login(
                 event_type=AuditEventType.LOGIN_FAILED,
                 status="failure",
                 details={"email": request.email, "reason": error_msg},
-                ip_address=http_request.client.host if http_request.client else None,
+                ip_address=client_ip,
+                user_agent=user_agent,
                 db_session=db
             )
             raise HTTPException(
@@ -155,7 +173,8 @@ async def login(
             event_type=AuditEventType.USER_LOGIN,
             status="success",
             user_id=user.id,
-            ip_address=http_request.client.host if http_request.client else None,
+            ip_address=client_ip,
+            user_agent=user_agent,
             db_session=db
         )
         
@@ -190,11 +209,14 @@ async def logout(
     response.delete_cookie(key="session_token", path="/")
     
     if current_user:
+        client_ip = http_request.client.host if http_request.client else None
+        user_agent = http_request.headers.get("user-agent")
         log_authentication_event(
             event_type=AuditEventType.USER_LOGOUT,
             status="success",
             user_id=current_user.id,
-            ip_address=http_request.client.host if http_request.client else None,
+            ip_address=client_ip,
+            user_agent=user_agent,
             db_session=db
         )
         

@@ -629,6 +629,18 @@ class FileService:
         sig_valid = cls.verify_manifest_signature(db, package)
         if not sig_valid:
             AuditService.log_event(
+                event_type=AuditEventType.CRYPTO_VERIFICATION_FAILED.value,
+                action=f"Cryptographic verification failed: invalid signature on package {package_id}",
+                status="failure",
+                user_id=user_id,
+                resource_id=package_id,
+                resource_type="package",
+                details={"package_id": package_id, "reason": "invalid_manifest_signature"},
+                ip_address=ip_address,
+                user_agent=user_agent,
+                db_session=db,
+            )
+            AuditService.log_event(
                 event_type=AuditEventType.FILE_DOWNLOADED.value,
                 action=f"Download rejected: invalid signature on package {package_id}",
                 status="failure",
@@ -710,6 +722,29 @@ class FileService:
         try:
             cek = CryptoService.decrypt_aes_gcm(wrap_key, wrap_nonce, wrapped_cek_ct)
         except Exception as e:
+            AuditService.log_event(
+                event_type=AuditEventType.CRYPTO_VERIFICATION_FAILED.value,
+                action=f"Cryptographic verification failed: key unwrap failed on package {package_id}",
+                status="failure",
+                user_id=user_id,
+                resource_id=package_id,
+                resource_type="package",
+                details={"package_id": package_id, "error": str(e)},
+                ip_address=ip_address,
+                user_agent=user_agent,
+                db_session=db,
+            )
+            AuditService.log_event(
+                event_type=AuditEventType.FILE_DOWNLOADED.value,
+                action=f"Download failed: key unwrap failure on package {package_id}",
+                status="failure",
+                user_id=user_id,
+                resource_id=package_id,
+                resource_type="package",
+                ip_address=ip_address,
+                user_agent=user_agent,
+                db_session=db,
+            )
             raise DecryptionFailedError(f"Failed to unwrap content encryption key: {e}") from e
 
         # 8. Load encrypted payload from storage
@@ -729,6 +764,29 @@ class FileService:
         try:
             plaintext = CryptoService.decrypt_aes_gcm(cek, file_nonce, file_ct, associated_data=aad)
         except Exception as e:
+            AuditService.log_event(
+                event_type=AuditEventType.CRYPTO_VERIFICATION_FAILED.value,
+                action=f"Cryptographic verification failed: payload decryption failed on package {package_id}",
+                status="failure",
+                user_id=user_id,
+                resource_id=package_id,
+                resource_type="package",
+                details={"package_id": package_id, "error": str(e)},
+                ip_address=ip_address,
+                user_agent=user_agent,
+                db_session=db,
+            )
+            AuditService.log_event(
+                event_type=AuditEventType.FILE_DOWNLOADED.value,
+                action=f"Download failed: payload decryption failure on package {package_id}",
+                status="failure",
+                user_id=user_id,
+                resource_id=package_id,
+                resource_type="package",
+                ip_address=ip_address,
+                user_agent=user_agent,
+                db_session=db,
+            )
             raise DecryptionFailedError(f"File payload authentication or decryption failed: {e}") from e
 
         # 10. Audit event logging

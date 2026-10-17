@@ -294,3 +294,80 @@ class TestAuditConvenienceFunctions:
         assert result is not None
         assert result.event_type == "file_downloaded"
         assert result.resource_type == "file"
+
+
+class TestAuditSanitizationAndFiltering:
+    """Advanced test cases for sanitization and event filtering"""
+
+    def test_sanitize_details_nested_dict(self):
+        """Test recursive sanitization on nested dictionaries"""
+        details = {
+            "outer_id": "pkg_999",
+            "nested_auth": {
+                "token": "secret_token_val",
+                "session_token": "secret_session",
+                "safe_user": "alice",
+            },
+            "safe_metadata": {"version": 2}
+        }
+        sanitized = AuditService._sanitize_details(details)
+        assert sanitized["outer_id"] == "pkg_999"
+        assert sanitized["safe_metadata"]["version"] == 2
+        assert "token" not in sanitized["nested_auth"]
+        assert "session_token" not in sanitized["nested_auth"]
+        assert sanitized["nested_auth"]["safe_user"] == "alice"
+
+    def test_sanitize_details_list_of_dicts(self):
+        """Test recursive sanitization inside lists of objects"""
+        details = {
+            "recipients": [
+                {"email": "bob@example.com", "private_key": "raw_key_bytes"},
+                {"email": "carol@example.com", "password": "plaintext_pass", "status": "active"},
+            ]
+        }
+        sanitized = AuditService._sanitize_details(details)
+        assert len(sanitized["recipients"]) == 2
+        assert sanitized["recipients"][0]["email"] == "bob@example.com"
+        assert "private_key" not in sanitized["recipients"][0]
+        assert sanitized["recipients"][1]["status"] == "active"
+        assert "password" not in sanitized["recipients"][1]
+
+    def test_sanitize_details_compound_sensitive_keys(self):
+        """Test detection of compound sensitive keys (api_token, secret_key, etc.)"""
+        details = {
+            "user_password": "pwd",
+            "api_secret": "sec",
+            "auth_token": "tok",
+            "ciphertext_bytes": "enc",
+            "safe_field": 123
+        }
+        sanitized = AuditService._sanitize_details(details)
+        assert sanitized == {"safe_field": 123}
+
+    def test_sanitize_details_pem_redaction(self):
+        """Test redacting PEM private key material in string values"""
+        details = {
+            "key_header": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgk...\n-----END PRIVATE KEY-----",
+            "description": "normal text"
+        }
+        sanitized = AuditService._sanitize_details(details)
+        assert sanitized["key_header"] == "[REDACTED_PRIVATE_KEY]"
+        assert sanitized["description"] == "normal text"
+
+    @pytest.mark.asyncio
+    async def test_log_user_registered_and_failure(self):
+        """Test log_user_registered and log_registration_failure convenience functions"""
+        from pqc_secure.services.audit import log_user_registered, log_registration_failure
+        mock_session = Mock()
+
+        res1 = await log_user_registered("user_xyz", db_session=mock_session, ip_address="127.0.0.1", user_agent="PyTest")
+        assert res1 is not None
+        assert res1.user_id == "user_xyz"
+        assert res1.ip_address == "127.0.0.1"
+        assert res1.user_agent == "PyTest"
+
+        res2 = await log_registration_failure("invalid@example.com", reason="Weak password", db_session=mock_session)
+        assert res2 is not None
+        assert res2.status == "failure"
+        assert "Weak password" in res2.action
+

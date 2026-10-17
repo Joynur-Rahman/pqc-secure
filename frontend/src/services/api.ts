@@ -1,4 +1,4 @@
-import { User, LoginResponse } from '../types'
+import { User, LoginResponse, AuditLog, AuditLogsResponse } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10)
@@ -192,8 +192,22 @@ export const fileService = {
 }
 
 export const auditService = {
-  getLogs: (params?: { eventType?: string; userId?: string; startDate?: string; endDate?: string }) => {
-    const query = new URLSearchParams(params as Record<string, string>).toString()
-    return apiRequest<AuditLog[]>(`/audit-logs?${query}`)
+  getLogs: (params?: {
+    eventType?: string
+    userId?: string
+    startDate?: string
+    endDate?: string
+    limit?: number
+    offset?: number
+    page?: number
+    pageSize?: number
+  }) => {
+    const query = new URLSearchParams(
+      Object.entries(params || {}).reduce((acc, [k, v]) => {
+        if (v !== undefined && v !== null) acc[k] = String(v)
+        return acc
+      }, {} as Record<string, string>)
+    ).toString()
+    return apiRequest<AuditLogsResponse>(`/audit-logs${query ? `?${query}` : ''}`)
   },
 }

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from pqc_secure.db.session import get_db_session
 from pqc_secure.db.models import User
 from pqc_secure.services.auth import AuthService
+from pqc_secure.core.config import settings
 
 get_db = get_db_session
 auth_service = AuthService()
@@ -122,3 +123,23 @@ async def get_optional_current_user(
         return None
     
     return user
+
+
+def is_admin_user(user: Optional[User]) -> bool:
+    """Check if a user has administrator privileges"""
+    if not user or not user.email:
+        return False
+    admin_emails = settings.get_admin_emails_list()
+    return user.email.lower() in admin_emails or getattr(user, "is_admin", False)
+
+
+async def get_current_admin_user(
+    current_user: User = Depends(get_current_active_user)
+) -> User:
+    """Dependency verifying user has administrator privileges"""
+    if not is_admin_user(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Administrative privileges required"
+        )
+    return current_user

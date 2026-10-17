@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pqc_secure.db.models import AuditLog, AuditEventType
 from pqc_secure.core.config import settings
 
@@ -111,21 +112,55 @@ class AuditService:
             return None
     
     @staticmethod
-    def _sanitize_details(details: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_details(details: Any) -> Any:
         """
-        Remove sensitive fields from audit details.
+        Recursively remove sensitive fields from audit details.
         
-        Excluded fields: password, private_key, secret, token, plaintext, ciphertext
+        Excluded fields: password, private_key, secret, token, plaintext, ciphertext,
+        shared_secret, key_material, nonce, authentication_tag, signature, etc.
         """
-        sensitive_keys = {
+        if not isinstance(details, dict):
+            if isinstance(details, list):
+                return [AuditService._sanitize_details(item) for item in details]
+            return details
+
+        sensitive_exact = {
             'password', 'private_key', 'secret', 'token', 'plaintext', 
             'ciphertext', 'shared_secret', 'key_material', 'nonce',
-            'authentication_tag', 'signature', 'public_key_material'
+            'authentication_tag', 'signature', 'public_key_material',
+            'private_key_material', 'session_token', 'access_token',
+            'refresh_token', 'auth_token', 'api_key', 'api_secret',
+            'symmetric_key', 'wrapping_key', 'cek', 'credentials'
         }
         
+        sensitive_substrings = (
+            'password', 'secret', 'private_key', 'token', 'plaintext', 'ciphertext'
+        )
+
         sanitized = {}
         for key, value in details.items():
-            if key.lower() not in sensitive_keys:
+            key_str = str(key)
+            key_lower = key_str.lower()
+            
+            # Check exact match or sensitive substring
+            if key_lower in sensitive_exact or any(sub in key_lower for sub in sensitive_substrings):
+                continue
+                
+            # If value is a nested dictionary or list, sanitize recursively
+            if isinstance(value, dict):
+                sanitized[key] = AuditService._sanitize_details(value)
+            elif isinstance(value, list):
+                sanitized[key] = [
+                    AuditService._sanitize_details(item) if isinstance(item, (dict, list)) else item
+                    for item in value
+                ]
+            elif isinstance(value, str):
+                # Redact PEM private key or obvious raw key material
+                if "BEGIN PRIVATE KEY" in value or "BEGIN RSA PRIVATE KEY" in value or "BEGIN EC PRIVATE KEY" in value:
+                    sanitized[key] = "[REDACTED_PRIVATE_KEY]"
+                else:
+                    sanitized[key] = value
+            else:
                 sanitized[key] = value
         
         return sanitized
@@ -146,7 +181,7 @@ class AuditService:
         Args:
             db_session: Database session
             user_id: Filter by user ID
-            event_type: Filter by event type
+            event_type: Filter by event type (single or comma-separated)
             start_date: Filter events after this date
             end_date: Filter events before this date
             limit: Maximum number of results
@@ -161,13 +196,19 @@ class AuditService:
             query = query.filter(AuditLog.user_id == user_id)
         
         if event_type:
-            query = query.filter(AuditLog.event_type == event_type)
+            types = [t.strip().lower() for t in event_type.split(",") if t.strip()]
+            if len(types) == 1:
+                query = query.filter(func.lower(AuditLog.event_type) == types[0])
+            elif len(types) > 1:
+                query = query.filter(func.lower(AuditLog.event_type).in_(types))
         
         if start_date:
-            query = query.filter(AuditLog.created_at >= start_date)
+            clean_start = start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
+            query = query.filter(AuditLog.created_at >= clean_start)
         
         if end_date:
-            query = query.filter(AuditLog.created_at <= end_date)
+            clean_end = end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
+            query = query.filter(AuditLog.created_at <= clean_end)
         
         # Get total count before pagination
         total_count = query.count()
@@ -185,7 +226,8 @@ def log_authentication_event(
     user_id: Optional[str] = None,
     ip_address: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-    db_session: Optional[Session] = None
+    db_session: Optional[Session] = None,
+    user_agent: Optional[str] = None,
 ):
     """Log authentication-related events"""
     return AuditService.log_event(
@@ -195,6 +237,7 @@ def log_authentication_event(
         user_id=user_id,
         resource_type="user",
         ip_address=ip_address,
+        user_agent=user_agent,
         details=details,
         db_session=db_session
     )
@@ -208,7 +251,8 @@ def log_access_event(
     resource_type: Optional[str] = None,
     ip_address: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-    db_session: Optional[Session] = None
+    db_session: Optional[Session] = None,
+    user_agent: Optional[str] = None,
 ):
     """Log access/permission-related events"""
     return AuditService.log_event(
@@ -219,6 +263,7 @@ def log_access_event(
         resource_id=resource_id,
         resource_type=resource_type,
         ip_address=ip_address,
+        user_agent=user_agent,
         details=details,
         db_session=db_session
     )
@@ -230,7 +275,9 @@ def log_crypto_event(
     user_id: Optional[str] = None,
     resource_id: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-    db_session: Optional[Session] = None
+    db_session: Optional[Session] = None,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None,
 ):
     """Log cryptographic operation events"""
     return AuditService.log_event(
@@ -240,6 +287,8 @@ def log_crypto_event(
         user_id=user_id,
         resource_id=resource_id,
         resource_type="cryptographic_operation",
+        ip_address=ip_address,
+        user_agent=user_agent,
         details=details,
         db_session=db_session
     )
@@ -251,7 +300,9 @@ def log_file_event(
     user_id: Optional[str] = None,
     resource_id: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
-    db_session: Optional[Session] = None
+    db_session: Optional[Session] = None,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None,
 ):
     """Log file operation events"""
     return AuditService.log_event(
@@ -261,12 +312,19 @@ def log_file_event(
         user_id=user_id,
         resource_id=resource_id,
         resource_type="file",
+        ip_address=ip_address,
+        user_agent=user_agent,
         details=details,
         db_session=db_session
     )
 
 
-async def log_user_registered(user_id: str, db_session: Optional[Session] = None):
+async def log_user_registered(
+    user_id: str,
+    db_session: Optional[Session] = None,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None,
+):
     """Log user registration event"""
     return AuditService.log_event(
         event_type=AuditEventType.USER_REGISTERED,
@@ -275,11 +333,19 @@ async def log_user_registered(user_id: str, db_session: Optional[Session] = None
         user_id=user_id,
         resource_id=user_id,
         resource_type="user",
+        ip_address=ip_address,
+        user_agent=user_agent,
         db_session=db_session
     )
 
 
-async def log_registration_failure(email: str, reason: Optional[str] = None, db_session: Optional[Session] = None):
+async def log_registration_failure(
+    email: str,
+    reason: Optional[str] = None,
+    db_session: Optional[Session] = None,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None,
+):
     """Log failed registration attempt"""
     return AuditService.log_event(
         event_type=AuditEventType.REGISTRATION_FAILED,
@@ -288,5 +354,7 @@ async def log_registration_failure(email: str, reason: Optional[str] = None, db_
         resource_id=email,
         resource_type="user",
         details={"email": email, "reason": reason},
+        ip_address=ip_address,
+        user_agent=user_agent,
         db_session=db_session
     )
