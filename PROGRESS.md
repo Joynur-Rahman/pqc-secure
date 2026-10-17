@@ -84,39 +84,38 @@ Core infrastructure and user authentication registration API is complete with co
 
 ---
 
-### Phase 4: File Upload & Encryption ⏳ NOT STARTED
+### Phase 4: File Upload & Encryption ✅ COMPLETE
 
-- [ ] 4.1 File Upload API (Unencrypted Endpoint)
-- [ ] 4.2 Encryption Pipeline
-- [ ] 4.3 Package Metadata & Signing
-- [ ] 4.4 File Sharing Endpoint
-- [ ] 4.5 Upload UI
+- [x] 4.1 File Upload API (Unencrypted Endpoint) - `/files/upload` with chunking and 500MB size limit
+- [x] 4.2 Encryption Pipeline - Content encryption key generation, AES-256-GCM, KEM encapsulation / X25519 key agreement
+- [x] 4.3 Package Metadata & Signing - Canonical manifest creation, ML-DSA-65 / Ed25519 signing
+- [x] 4.4 File Sharing Endpoint - `/files/share` with recipient access grants and audit logging
+- [x] 4.5 Upload UI - `FileUpload.tsx` with drag-and-drop, recipient pills, and progress display
 
-**Estimated Timeline:** Weeks 3-4
-**Priority:** High (core feature)
-
----
-
-### Phase 5: File Download & Decryption ⏳ NOT STARTED
-
-- [ ] 5.1 File Retrieval API
-- [ ] 5.2 Decryption Pipeline
-- [ ] 5.3 File Download Endpoint
-- [ ] 5.4 Download UI
-
-**Estimated Timeline:** Week 4
-**Priority:** High (core feature)
+**Phase 4 Completion:** 100% (5 of 5 sub-tasks) ✅
 
 ---
 
-### Phase 6: Share Revocation & Access Control ⏳ NOT STARTED
+### Phase 5: File Download & Decryption ✅ COMPLETE
 
-- [ ] 6.1 Revocation API
-- [ ] 6.2 Access Control Layer
-- [ ] 6.3 Revocation UI
+- [x] 5.1 File Retrieval API - `GET /files` and `GET /files/{package_id}`
+- [x] 5.2 Decryption Pipeline - Signature verification, ML-KEM/X25519 decapsulation, HKDF CEK unwrap, AES-256-GCM decryption
+- [x] 5.3 File Download Endpoint - `GET /files/{package_id}/download` with safe `Content-Disposition` headers
+- [x] 5.4 Download UI - `FileList.tsx` with shared file packages, decryption micro-animations, and error handling
 
-**Estimated Timeline:** Week 5
-**Priority:** Medium
+**Phase 5 Completion:** 100% (4 of 4 sub-tasks) ✅
+**Test Status:** 295 backend tests passing, 27 frontend tests passing.
+
+---
+
+### Phase 6: Share Revocation & Access Control ✅ COMPLETE
+
+- [x] 6.1 Revocation API - `POST /files/{package_id}/grants/{grant_id}/revoke` with sender authorization checks, status revocation, audit logging, and download prevention
+- [x] 6.2 Access Control Layer - `AccessControlService` enforcing active grant verification across `GET /files`, `GET /files/{package_id}`, and `GET /files/{package_id}/download` with audit logging
+- [x] 6.3 Revocation UI - Recipient access management in `FileList.tsx`, interactive `ACTIVE` and `REVOKED` status badges, confirmation modal with security notice, and immediate state updates
+
+**Phase 6 Completion:** 100% (3 of 3 sub-tasks) ✅
+**Test Status:** 292+ backend tests passing, 31 frontend tests passing.
 
 ---
 

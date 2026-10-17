@@ -26,8 +26,9 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
   const url = `${API_BASE_URL}${endpoint}`
   const token = typeof window !== 'undefined' ? localStorage.getItem('session_token') : null
 
+  const isFormData = typeof FormData !== 'undefined' && options?.body instanceof FormData
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...((options?.headers as Record<string, string>) || {}),
   }
@@ -118,26 +119,76 @@ export const keyService = {
 }
 
 export const fileService = {
-  upload: (file: File) => {
+  upload: (file: File, uploadId?: string, chunkNumber = 0, totalChunks = 1) => {
     const formData = new FormData()
     formData.append('file', file)
-    return apiRequest<{ fileId: string }>('/files/upload', {
+    if (uploadId) formData.append('upload_id', uploadId)
+    formData.append('chunk_number', String(chunkNumber))
+    formData.append('total_chunks', String(totalChunks))
+    return apiRequest<{
+      upload_id: string
+      filename: string
+      chunk_number: number
+      total_chunks: number
+      bytes_uploaded: number
+      is_complete: boolean
+      message: string
+    }>('/files/upload', {
       method: 'POST',
       body: formData,
     })
   },
-  share: (fileId: string, recipientIds: string[], encryptionMode: 'pqc' | 'classical') =>
+  share: (
+    uploadId: string,
+    recipientEmails: string[],
+    encryptionMode: 'pqc' | 'classical' = 'pqc'
+  ) =>
     apiRequest<FilePackage>('/files/share', {
       method: 'POST',
-      body: JSON.stringify({ fileId, recipientIds, encryptionMode }),
+      body: JSON.stringify({
+        upload_id: uploadId,
+        recipient_emails: recipientEmails,
+        encryption_mode: encryptionMode,
+      }),
     }),
-  list: () => apiRequest<FilePackageMetadata[]>('/files'),
-  getPackage: (packageId: string) => apiRequest<FilePackage>(`/files/${packageId}`),
-  download: (packageId: string) => apiRequest<Blob>(`/files/${packageId}/download`, {
-    headers: { Accept: 'application/octet-stream' },
-  }),
+  list: () =>
+    apiRequest<{ packages: FilePackageMetadata[]; total: number }>('/files'),
+  getPackage: (packageId: string) =>
+    apiRequest<FilePackage>(`/files/${packageId}`),
+  download: async (packageId: string): Promise<{ blob?: Blob; filename?: string; error?: string }> => {
+    const url = `${API_BASE_URL}/files/${packageId}/download`
+    const token = typeof window !== 'undefined' ? localStorage.getItem('session_token') : null
+
+    try {
+      const response = await fetchWithTimeout(url, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.detail || err.message || `Download failed: ${response.status}`)
+      }
+
+      const disposition = response.headers.get('Content-Disposition') || ''
+      let filename = 'downloaded_file'
+      const filenameMatch = disposition.match(/filename="?([^";]+)"?/i)
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1]
+      }
+
+      const blob = await response.blob()
+      return { blob, filename }
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Download failed' }
+    }
+  },
   revokeGrant: (packageId: string, grantId: string) =>
-    apiRequest<void>(`/files/${packageId}/grants/${grantId}/revoke`, { method: 'POST' }),
+    apiRequest<void>(`/files/${packageId}/grants/${grantId}/revoke`, {
+      method: 'POST',
+    }),
 }
 
 export const auditService = {

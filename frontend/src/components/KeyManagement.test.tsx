@@ -90,7 +90,7 @@ describe('KeyManagement Component', () => {
     const autoGenBtn = screen.getByRole('button', { name: /Auto-generate keypair/i })
     fireEvent.click(autoGenBtn)
 
-    const textarea = screen.getByPlaceholderText(/Paste Base64-encoded/i) as HTMLTextAreaElement
+    const textarea = screen.getByPlaceholderText(/Base64/i) as HTMLTextAreaElement
     expect(textarea.value.length).toBeGreaterThan(0)
   })
 
@@ -128,7 +128,7 @@ describe('KeyManagement Component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /\+ Register Key/i }))
 
-    const textarea = screen.getByPlaceholderText(/Paste Base64-encoded/i)
+    const textarea = screen.getByPlaceholderText(/Base64/i)
     fireEvent.change(textarea, { target: { value: 'QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE=' } })
 
     const submitBtn = screen.getByRole('button', { name: /^Register Key$/i })

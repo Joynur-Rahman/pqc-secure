@@ -9,7 +9,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class KeyRegisterRequest(BaseModel):
     """Key registration request"""
     algorithm: str = Field(..., description="Key algorithm (e.g. ml-kem-768, ml-dsa-65, x25519, ed25519)")
-    public_key_material: str = Field(..., description="Base64-encoded public key bytes")
+    public_key_material: Optional[str] = Field(None, description="Base64-encoded public key bytes. If omitted, server generates a valid keypair.")
+    private_key_material: Optional[str] = Field(None, description="Optional Base64-encoded private key bytes")
     key_type: Optional[str] = Field("public", description="Key type (public or private)")
 
 

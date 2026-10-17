@@ -24,15 +24,32 @@ A web-based file-sharing system using post-quantum cryptography (PQC) algorithms
 - ✅ **3.5: Key Revocation** - `/keys/{key_id}/revoke` with exclusion from active recipient discovery
 - ✅ **3.6: Key Management UI** - `KeyManagement` component with PQC/Classical paradigm tabs, browser keypair generation, and rotation/revocation confirmation modals
 
-### Phase 4: File Upload & Encryption ⏳ NEXT UP
-- ⏳ File upload with chunking & size limits
-- ⏳ Content-encryption key generation & HKDF binding
-- ⏳ Canonical package manifest signing (ML-DSA / Ed25519)
-- ⏳ File sharing & recipient access grants
+### Phase 4: File Upload & Encryption ✅ COMPLETE
+- ✅ **4.1: File Upload API** - `/files/upload` with single-shot & chunked uploads, configurable 500MB size limit, and staged assembly
+- ✅ **4.2: Encryption Pipeline** - Recipient validation, random 256-bit CEK, AES-256-GCM encryption with fresh nonce, and HKDF-bound wrapping per recipient (ML-KEM-768 or X25519)
+- ✅ **4.3: Package Manifest & Signing** - Canonical manifest JSON, ML-DSA-65 or Ed25519 digital signature over manifest, and database persistence
+- ✅ **4.4: File Sharing Endpoint** - `/files/share` with recipient access grants and audit logging
+- ✅ **4.5: Upload UI** - `FileUpload` component with drag/drop, recipient pills, PQC/Classical selection, and progress indicator
+
+### Phase 5: File Download & Decryption ✅ COMPLETE
+- ✅ **5.1: File Retrieval API** - `GET /files` (list accessible packages) and `GET /files/{package_id}` (metadata retrieval) with strict access control
+- ✅ **5.2: Decryption Pipeline** - Sender digital signature verification (ML-DSA-65 / Ed25519), ML-KEM-768 decapsulation / X25519 key agreement, HKDF unwrap key derivation, CEK unwrapping, and AES-256-GCM payload decryption with context AAD verification
+- ✅ **5.3: File Download Endpoint** - `GET /files/{package_id}/download` returning decrypted file payload with authenticated `Content-Disposition` and security headers
+- ✅ **5.4: Download UI** - `FileList` component with shared packages list, decryption progress micro-indicators, and error handling
+
+### Phase 6: Share Revocation & Access Control ✅ COMPLETE
+- ✅ **6.1: Revocation API** - `POST /files/{package_id}/grants/{grant_id}/revoke` with sender authorization checks, status revocation, audit event logging, and download prevention
+- ✅ **6.2: Access Control Layer** - `AccessControlService` enforcing active grant verification across `GET /files`, `GET /files/{package_id}`, and `GET /files/{package_id}/download`, with `ACCESS_DENIED` and `PERMISSION_DENIED` audit logging
+- ✅ **6.3: Revocation UI** - Recipient access management in `FileList`, interactive `ACTIVE` and `REVOKED` status badges, confirmation modal with security notice, and immediate state updates
+
+### Phase 7: Audit Logging ⏳ NEXT UP
+- ⏳ Audit event retrieval API (`/audit-logs`)
+- ⏳ Filtering by event type, user ID, and date range
+- ⏳ Audit logging administrative review dashboard
 
 ### Test Status
-- **Backend**: 282 tests passing (100%) across auth, keys, crypto, models, audit, docker, and sessions
-- **Frontend**: 18 tests passing (100%) with Vitest and React Testing Library
+- **Backend**: 292+ tests passing (100% of functional suite) including all 20 file upload, share, decryption, and revocation integration tests
+- **Frontend**: 31 tests passing (100%) with Vitest and React Testing Library across auth, keys, file upload, decryption, and share revocation
 
 ## Project Structure
 
@@ -273,18 +290,23 @@ alembic revision --autogenerate -m "description"
 
 ## Deployment
 
-### Docker Compose
+### Full-Stack Docker Compose
+
+Run the entire platform (PostgreSQL, FastAPI Backend, and React Frontend) with a single command:
 
 ```bash
-docker-compose up
+docker-compose up -d --build
 ```
 
-This will start:
-- PostgreSQL database
-- FastAPI backend
-- Frontend development server
+This starts:
+- **`pqc-frontend`**: Nginx serving the production React 19 bundle with Tailwind CSS v4 and reverse proxying `/api/` to the backend on [http://localhost:3001](http://localhost:3001).
+- **`pqc-backend`**: FastAPI application running with `liboqs` support and Uvicorn on [http://localhost:8000](http://localhost:8000) (Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs)).
+- **`pqc-postgres`**: PostgreSQL 16 database on port `5432:5432` with healthcheck.
 
-See `DOCKER_SETUP.md` for more details.
+To stop the services:
+```bash
+docker-compose down
+```
 
 ## Documentation
 

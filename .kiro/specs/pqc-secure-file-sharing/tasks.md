@@ -119,110 +119,110 @@
 ## Phase 4: File Upload & Encryption
 
 ### 4.1 File Upload API (Unencrypted Endpoint)
-- [ ] Implement `/files/upload` POST endpoint
-- [ ] File size validation (up to 500MB configurable)
-- [ ] Chunk upload support for large files
-- [ ] Progress tracking
-- [ ] Temporary storage of uploaded file
-- [ ] Add tests
+- [x] Implement `/files/upload` POST endpoint
+- [x] File size validation (up to 500MB configurable)
+- [x] Chunk upload support for large files
+- [x] Progress tracking
+- [x] Temporary storage of uploaded file
+- [x] Add tests
 
 ### 4.2 Encryption Pipeline
-- [ ] Implement recipient validation (check active keys)
-- [ ] Implement content-encryption key generation
-- [ ] Implement HKDF context binding (sender, recipients, version)
-- [ ] Implement AES-256-GCM encryption with fresh nonce
-- [ ] Implement nonce management (never reuse with same key)
-- [ ] Implement file chunking for large files
-- [ ] Add comprehensive tests
+- [x] Implement recipient validation (check active keys)
+- [x] Implement content-encryption key generation
+- [x] Implement HKDF context binding (sender, recipients, version)
+- [x] Implement AES-256-GCM encryption with fresh nonce
+- [x] Implement nonce management (never reuse with same key)
+- [x] Implement file chunking for large files
+- [x] Add comprehensive tests
 
 ### 4.3 Package Metadata & Signing
-- [ ] Define canonical package manifest format
-- [ ] Implement metadata signing using sender's private key (ML-DSA or Ed25519)
-- [ ] Implement signature verification logic
-- [ ] Store encrypted payload in storage (FS/MinIO)
-- [ ] Store metadata in database
-- [ ] Add tests
+- [x] Define canonical package manifest format
+- [x] Implement metadata signing using sender's private key (ML-DSA or Ed25519)
+- [x] Implement signature verification logic
+- [x] Store encrypted payload in storage (FS/MinIO)
+- [x] Store metadata in database
+- [x] Add tests
 
 ### 4.4 File Sharing Endpoint
-- [ ] Implement `/files/share` POST endpoint
-- [ ] Validate sender authentication
-- [ ] Validate recipient list
-- [ ] Validate recipient key versions and status
-- [ ] Select encryption mode (PQC or classical)
-- [ ] Orchestrate encryption pipeline
-- [ ] Create access grants for recipients
-- [ ] Return package ID and status
-- [ ] Add tests
+- [x] Implement `/files/share` POST endpoint
+- [x] Validate sender authentication
+- [x] Validate recipient list
+- [x] Validate recipient key versions and status
+- [x] Select encryption mode (PQC or classical)
+- [x] Orchestrate encryption pipeline
+- [x] Create access grants for recipients
+- [x] Return package ID and status
+- [x] Add tests
 
 ### 4.5 Upload UI
-- [ ] Create file upload form
-- [ ] Create recipient selector (multi-select)
-- [ ] Create encryption mode selector (PQC/classical)
-- [ ] Implement upload progress display
-- [ ] Add error handling and retry logic
-- [ ] Add tests
+- [x] Create file upload form
+- [x] Create recipient selector (multi-select)
+- [x] Create encryption mode selector (PQC/classical)
+- [x] Implement upload progress display
+- [x] Add error handling and retry logic
+- [x] Add tests
 
 ---
 
 ## Phase 5: File Download & Decryption
 
 ### 5.1 File Retrieval API
-- [ ] Implement `/files` GET endpoint (list shared files for recipient)
-- [ ] Implement `/files/{package_id}` GET endpoint (retrieve package metadata)
-- [ ] Access control checks (is user recipient?)
-- [ ] Return package info without decrypting
-- [ ] Add tests
+- [x] Implement `/files` GET endpoint (list shared files for recipient)
+- [x] Implement `/files/{package_id}` GET endpoint (retrieve package metadata)
+- [x] Access control checks (is user recipient?)
+- [x] Return package info without decrypting
+- [x] Add tests
 
 ### 5.2 Decryption Pipeline
-- [ ] Implement signature verification against sender's key
-- [ ] Implement recipient-specific decapsulation (ML-KEM) or key agreement (X25519)
-- [ ] Implement content-encryption key derivation via HKDF
-- [ ] Implement AES-256-GCM decryption
-- [ ] Handle authentication failure gracefully
-- [ ] Return plaintext file only on successful verification
-- [ ] Add comprehensive tests
+- [x] Implement signature verification against sender's key
+- [x] Implement recipient-specific decapsulation (ML-KEM) or key agreement (X25519)
+- [x] Implement content-encryption key derivation via HKDF
+- [x] Implement AES-256-GCM decryption
+- [x] Handle authentication failure gracefully
+- [x] Return plaintext file only on successful verification
+- [x] Add comprehensive tests
 
 ### 5.3 File Download Endpoint
-- [ ] Implement `/files/{package_id}/download` GET endpoint
-- [ ] Access control check
-- [ ] Signature verification
-- [ ] Decryption orchestration
-- [ ] Return file with safe content-disposition headers
-- [ ] Add error handling
-- [ ] Add tests
+- [x] Implement `/files/{package_id}/download` GET endpoint
+- [x] Access control check
+- [x] Signature verification
+- [x] Decryption orchestration
+- [x] Return file with safe content-disposition headers
+- [x] Add error handling
+- [x] Add tests
 
 ### 5.4 Download UI
-- [ ] Create shared files list component
-- [ ] Display file metadata (sender, size, date shared)
-- [ ] Implement download button
-- [ ] Add decryption progress indicator
-- [ ] Handle decryption errors gracefully
-- [ ] Add tests
+- [x] Create shared files list component
+- [x] Display file metadata (sender, size, date shared)
+- [x] Implement download button
+- [x] Add decryption progress indicator
+- [x] Handle decryption errors gracefully
+- [x] Add tests
 
 ---
 
 ## Phase 6: Share Revocation & Access Control
 
 ### 6.1 Revocation API
-- [ ] Implement `/files/{package_id}/grants/{grant_id}/revoke` POST endpoint
-- [ ] Validate sender authorization
-- [ ] Mark grant as revoked
-- [ ] Prevent future downloads via this grant
-- [ ] Return confirmation
-- [ ] Add tests
+- [x] Implement `/files/{package_id}/grants/{grant_id}/revoke` POST endpoint
+- [x] Validate sender authorization
+- [x] Mark grant as revoked
+- [x] Prevent future downloads via this grant
+- [x] Return confirmation
+- [x] Add tests
 
 ### 6.2 Access Control Layer
-- [ ] Implement authorization checks in all file endpoints
-- [ ] Check active grants for recipients
-- [ ] Verify grant status (not revoked)
-- [ ] Log access decisions (audit trail)
-- [ ] Add tests
+- [x] Implement authorization checks in all file endpoints
+- [x] Check active grants for recipients
+- [x] Verify grant status (not revoked)
+- [x] Log access decisions (audit trail)
+- [x] Add tests
 
 ### 6.3 Revocation UI
-- [ ] Create revoke button on sender's file list
-- [ ] Add confirmation dialog
-- [ ] Display revocation status
-- [ ] Add tests
+- [x] Create revoke button on sender's file list
+- [x] Add confirmation dialog
+- [x] Display revocation status
+- [x] Add tests
 
 ---
 
