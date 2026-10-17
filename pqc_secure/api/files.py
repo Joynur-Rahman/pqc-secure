@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import (
     APIRouter,
@@ -21,11 +21,19 @@ from sqlalchemy.orm import Session
 from pqc_secure.api.deps import get_current_active_user, get_db
 from pqc_secure.db.models import AccessGrant, FilePackage, GrantStatus, User
 from pqc_secure.schemas.files import (
+    AccessGrantResponse,
+    AccessGrantRevokeResponse,
     FilePackageListResponse,
     FilePackageResponse,
     FileShareRequest,
     FileUploadResponse,
     RecipientInfo,
+)
+from pqc_secure.services.access_control import (
+    AccessControlService,
+    GrantNotFoundError,
+    PackageNotFoundError as ACPackageNotFoundError,
+    UnauthorizedRevocationError,
 )
 from pqc_secure.services.file import (
     AccessDeniedError,
@@ -46,16 +54,25 @@ def _format_package_response(package: FilePackage, db: Session) -> FilePackageRe
     sender = db.query(User).filter(User.id == package.sender_id).first()
     sender_email = sender.email if sender else None
 
+    # Load access grants for this package to provide accurate status & grant_id
+    grants = db.query(AccessGrant).filter(AccessGrant.package_id == package.id).all()
+    grant_by_recipient = {g.recipient_id: g for g in grants}
+
     # Parse recipients from canonical manifest
     recipients_info = []
     try:
         manifest = json.loads(package.manifest_json)
         for r in manifest.get("recipients", []):
+            rec_id = r.get("recipient_id")
+            grant = grant_by_recipient.get(rec_id)
             recipients_info.append(
                 RecipientInfo(
-                    recipient_id=r.get("recipient_id"),
+                    recipient_id=rec_id,
                     recipient_email=r.get("recipient_email"),
                     recipient_key_id=r.get("key_id", ""),
+                    grant_id=grant.id if grant else None,
+                    status=grant.status if grant else "active",
+                    revoked_at=grant.revoked_at if grant else None,
                 )
             )
     except Exception:
@@ -168,33 +185,31 @@ async def list_files(
 @router.get("/{package_id}", response_model=FilePackageResponse)
 async def get_file_metadata(
     package_id: str,
+    request: Request,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Retrieve metadata for a specific shared file package."""
-    package = FileService.get_package_by_id(db, package_id)
+    """Retrieve metadata for a specific shared file package with access verification."""
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    is_authorized, reason, grant, package = AccessControlService.check_package_access(
+        db=db,
+        user_id=current_user.id,
+        package_id=package_id,
+        ip_address=client_ip,
+        user_agent=user_agent,
+    )
     if not package:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Package {package_id} not found",
         )
-
-    # Access check: sender or active recipient
-    if package.sender_id != current_user.id:
-        grant = (
-            db.query(AccessGrant)
-            .filter(
-                AccessGrant.package_id == package_id,
-                AccessGrant.recipient_id == current_user.id,
-                AccessGrant.status == GrantStatus.ACTIVE.value,
-            )
-            .first()
+    if not is_authorized:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=reason,
         )
-        if not grant:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this file package",
-            )
 
     return _format_package_response(package, db)
 
@@ -236,7 +251,7 @@ async def download_file(
     except SignatureVerificationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Security alert: Package signature failed verification. File may be tampered.",
+            detail="Security alert: Package signature failed verification. File may be tampered.",
         )
     except DecryptionFailedError as e:
         raise HTTPException(
@@ -248,4 +263,83 @@ async def download_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Download service error: {str(e)}",
         )
+
+
+@router.post("/{package_id}/grants/{grant_id}/revoke", response_model=AccessGrantRevokeResponse)
+async def revoke_access_grant(
+    package_id: str,
+    grant_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Revoke an access grant for a package recipient.
+    
+    Only the sender who created the package can revoke access grants.
+    """
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    try:
+        grant = FileService.revoke_access_grant(
+            db=db,
+            sender_id=current_user.id,
+            package_id=package_id,
+            grant_id=grant_id,
+            ip_address=client_ip,
+            user_agent=user_agent,
+        )
+        return AccessGrantRevokeResponse(
+            package_id=package_id,
+            grant_id=grant.id,
+            status=grant.status,
+            message="Access grant successfully revoked",
+        )
+    except ACPackageNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except GrantNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except UnauthorizedRevocationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Revocation error: {str(e)}",
+        )
+
+
+@router.get("/{package_id}/grants", response_model=List[AccessGrantResponse])
+async def list_package_grants(
+    package_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """List all access grants for a package (only accessible by sender)."""
+    try:
+        grants = AccessControlService.list_package_grants(
+            db=db,
+            user_id=current_user.id,
+            package_id=package_id,
+        )
+        res = []
+        for g in grants:
+            recipient = db.query(User).filter(User.id == g.recipient_id).first()
+            res.append(
+                AccessGrantResponse(
+                    id=g.id,
+                    grant_id=g.id,
+                    package_id=g.package_id,
+                    recipient_id=g.recipient_id,
+                    recipient_email=recipient.email if recipient else None,
+                    status=g.status,
+                    created_at=g.created_at,
+                    revoked_at=g.revoked_at,
+                )
+            )
+        return res
+    except ACPackageNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except UnauthorizedRevocationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+
 

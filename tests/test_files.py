@@ -465,3 +465,196 @@ class TestFileDownloadAndDecryption:
         assert resp.status_code == 400
         assert "signature failed verification" in resp.json()["detail"].lower()
 
+
+class TestShareRevocationAndAccessControl:
+    """Tests for Phase 6 Share Revocation & Fine-grained Access Control."""
+
+    def _setup_shared_package(self, client, alice, bob):
+        """Helper to create a shared PQC package from Alice to Bob."""
+        _, alice_token = alice
+        upload_resp = client.post(
+            "/files/upload",
+            headers={"Authorization": f"Bearer {alice_token}"},
+            files={"file": ("classified_briefing.pdf", io.BytesIO(b"Confidential post-quantum briefing"), "application/pdf")},
+        )
+        assert upload_resp.status_code == 201
+
+        share_resp = client.post(
+            "/files/share",
+            headers={"Authorization": f"Bearer {alice_token}"},
+            json={
+                "upload_id": upload_resp.json()["upload_id"],
+                "recipient_emails": ["bob@example.com"],
+                "encryption_mode": "pqc",
+            },
+        )
+        assert share_resp.status_code == 201
+        package_data = share_resp.json()
+        package_id = package_data["package_id"]
+        grant_id = package_data["recipients"][0]["grant_id"]
+        return package_id, grant_id
+
+    def test_sender_revokes_grant_successfully(self, client, alice, bob, db_session):
+        """Test sender successfully revokes recipient grant and audit event is recorded."""
+        from pqc_secure.db.models import AuditEventType, AuditLog, GrantStatus
+
+        _, alice_token = alice
+        package_id, grant_id = self._setup_shared_package(client, alice, bob)
+
+        # Alice revokes Bob's grant
+        revoke_resp = client.post(
+            f"/files/{package_id}/grants/{grant_id}/revoke",
+            headers={"Authorization": f"Bearer {alice_token}"},
+        )
+        assert revoke_resp.status_code == 200
+        data = revoke_resp.json()
+        assert data["package_id"] == package_id
+        assert data["grant_id"] == grant_id
+        assert data["status"] == GrantStatus.REVOKED.value
+
+        # Check audit event
+        audit = (
+            db_session.query(AuditLog)
+            .filter(
+                AuditLog.event_type == AuditEventType.SHARE_REVOKED.value,
+                AuditLog.resource_id == package_id,
+            )
+            .first()
+        )
+        assert audit is not None
+        assert audit.status == "success"
+
+    def test_revoked_recipient_download_denied(self, client, alice, bob):
+        """Test that after revocation, recipient download is strictly rejected with 403."""
+        _, alice_token = alice
+        _, bob_token = bob
+        package_id, grant_id = self._setup_shared_package(client, alice, bob)
+
+        # 1. Verify Bob can initially download
+        pre_resp = client.get(
+            f"/files/{package_id}/download",
+            headers={"Authorization": f"Bearer {bob_token}"},
+        )
+        assert pre_resp.status_code == 200
+
+        # 2. Alice revokes Bob's access
+        revoke_resp = client.post(
+            f"/files/{package_id}/grants/{grant_id}/revoke",
+            headers={"Authorization": f"Bearer {alice_token}"},
+        )
+        assert revoke_resp.status_code == 200
+
+        # 3. Bob attempts to download again -> 403 Forbidden
+        post_resp = client.get(
+            f"/files/{package_id}/download",
+            headers={"Authorization": f"Bearer {bob_token}"},
+        )
+        assert post_resp.status_code == 403
+        assert "revoked" in post_resp.json()["detail"].lower()
+
+    def test_revoked_recipient_metadata_access_denied(self, client, alice, bob):
+        """Test that after revocation, recipient cannot access package metadata (403)."""
+        _, alice_token = alice
+        _, bob_token = bob
+        package_id, grant_id = self._setup_shared_package(client, alice, bob)
+
+        # Alice revokes Bob's grant
+        client.post(
+            f"/files/{package_id}/grants/{grant_id}/revoke",
+            headers={"Authorization": f"Bearer {alice_token}"},
+        )
+
+        # Bob attempts GET /files/{package_id}
+        resp = client.get(
+            f"/files/{package_id}",
+            headers={"Authorization": f"Bearer {bob_token}"},
+        )
+        assert resp.status_code == 403
+        assert "revoked" in resp.json()["detail"].lower()
+
+    def test_revoked_package_omitted_from_recipient_file_list(self, client, alice, bob):
+        """Test that a revoked package is filtered out of recipient's GET /files list."""
+        _, alice_token = alice
+        _, bob_token = bob
+        package_id, grant_id = self._setup_shared_package(client, alice, bob)
+
+        # Verify present before revocation
+        list_pre = client.get("/files", headers={"Authorization": f"Bearer {bob_token}"})
+        assert any(p["package_id"] == package_id for p in list_pre.json()["packages"])
+
+        # Revoke
+        client.post(
+            f"/files/{package_id}/grants/{grant_id}/revoke",
+            headers={"Authorization": f"Bearer {alice_token}"},
+        )
+
+        # Verify omitted after revocation
+        list_post = client.get("/files", headers={"Authorization": f"Bearer {bob_token}"})
+        assert not any(p["package_id"] == package_id for p in list_post.json()["packages"])
+
+    def test_non_sender_cannot_revoke_grant(self, client, alice, bob, charlie):
+        """Test that a recipient or third party cannot revoke an access grant (403)."""
+        _, alice_token = alice
+        _, bob_token = bob
+        _, charlie_token = charlie
+        package_id, grant_id = self._setup_shared_package(client, alice, bob)
+
+        # Recipient attempts revocation
+        bob_resp = client.post(
+            f"/files/{package_id}/grants/{grant_id}/revoke",
+            headers={"Authorization": f"Bearer {bob_token}"},
+        )
+        assert bob_resp.status_code == 403
+
+        # Third party attempts revocation
+        charlie_resp = client.post(
+            f"/files/{package_id}/grants/{grant_id}/revoke",
+            headers={"Authorization": f"Bearer {charlie_token}"},
+        )
+        assert charlie_resp.status_code == 403
+
+    def test_revoke_nonexistent_grant_or_package(self, client, alice, bob):
+        """Test 404 for invalid package or grant IDs."""
+        _, alice_token = alice
+        package_id, _ = self._setup_shared_package(client, alice, bob)
+
+        # Nonexistent grant
+        resp1 = client.post(
+            f"/files/{package_id}/grants/nonexistent-grant/revoke",
+            headers={"Authorization": f"Bearer {alice_token}"},
+        )
+        assert resp1.status_code == 404
+
+        # Nonexistent package
+        resp2 = client.post(
+            "/files/nonexistent-pkg/grants/some-grant/revoke",
+            headers={"Authorization": f"Bearer {alice_token}"},
+        )
+        assert resp2.status_code == 404
+
+    def test_list_package_grants(self, client, alice, bob, charlie):
+        """Test GET /files/{package_id}/grants endpoint."""
+        _, alice_token = alice
+        _, bob_token = bob
+        package_id, grant_id = self._setup_shared_package(client, alice, bob)
+
+        # Sender Alice lists grants
+        resp = client.get(
+            f"/files/{package_id}/grants",
+            headers={"Authorization": f"Bearer {alice_token}"},
+        )
+        assert resp.status_code == 200
+        grants = resp.json()
+        assert len(grants) == 1
+        assert grants[0]["grant_id"] == grant_id
+        assert grants[0]["recipient_email"] == "bob@example.com"
+        assert grants[0]["status"] == "active"
+
+        # Non-sender Bob cannot list grants -> 403
+        resp_bob = client.get(
+            f"/files/{package_id}/grants",
+            headers={"Authorization": f"Bearer {bob_token}"},
+        )
+        assert resp_bob.status_code == 403
+
+

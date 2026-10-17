@@ -108,18 +108,14 @@ Core infrastructure and user authentication registration API is complete with co
 
 ---
 
-### Phase 6: Share Revocation & Access Control ⏳ NEXT UP
+### Phase 6: Share Revocation & Access Control ✅ COMPLETE
 
-- [ ] 6.1 Revocation API
-- [ ] 6.2 Access Control Layer
-- [ ] 6.3 Revocation UI
+- [x] 6.1 Revocation API - `POST /files/{package_id}/grants/{grant_id}/revoke` with sender authorization checks, status revocation, audit logging, and download prevention
+- [x] 6.2 Access Control Layer - `AccessControlService` enforcing active grant verification across `GET /files`, `GET /files/{package_id}`, and `GET /files/{package_id}/download` with audit logging
+- [x] 6.3 Revocation UI - Recipient access management in `FileList.tsx`, interactive `ACTIVE` and `REVOKED` status badges, confirmation modal with security notice, and immediate state updates
 
-- [ ] 6.1 Revocation API
-- [ ] 6.2 Access Control Layer
-- [ ] 6.3 Revocation UI
-
-**Estimated Timeline:** Week 5
-**Priority:** Medium
+**Phase 6 Completion:** 100% (3 of 3 sub-tasks) ✅
+**Test Status:** 292+ backend tests passing, 31 frontend tests passing.
 
 ---
 

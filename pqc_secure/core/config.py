@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     # Audit Logging Configuration
     audit_logging_enabled: bool = Field(default=True, description="Enable audit logging")
     audit_log_events: str = Field(
-        default="auth,permission,crypto,upload,download",
+        default="auth,permission,crypto,upload,download,share,access,key",
         description="Comma-separated list of audit event types to log"
     )
     

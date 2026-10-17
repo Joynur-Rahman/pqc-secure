@@ -2,12 +2,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { FileList } from './FileList'
 import { fileService } from '../services/api'
+import * as AuthHook from '../hooks/useAuth'
 
 vi.mock('../services/api', () => ({
   fileService: {
     list: vi.fn(),
     download: vi.fn(),
+    revokeGrant: vi.fn(),
   },
+}))
+
+vi.mock('../hooks/useAuth', () => ({
+  useAuth: vi.fn(() => ({
+    user: { id: 'user-alice', email: 'alice@example.com' },
+    loading: false,
+  })),
 }))
 
 describe('FileList and Decryption Component', () => {
@@ -143,4 +152,124 @@ describe('FileList and Decryption Component', () => {
       ).toBeDefined()
     })
   })
+
+  describe('Phase 6 Revocation UI (Task 6.3)', () => {
+    const sharedPackageWithRecipients = {
+      id: 'pkg-rev-101',
+      package_id: 'pkg-rev-101',
+      original_filename: 'defense_contract.pdf',
+      file_size: 4096,
+      crypto_mode: 'pqc',
+      package_version: '1.0',
+      sender_id: 'user-alice',
+      sender_email: 'alice@example.com',
+      recipients: [
+        {
+          recipient_id: 'user-bob',
+          recipient_email: 'bob@example.com',
+          recipient_key_id: 'ml-kem-768:key-bob-1',
+          grant_id: 'grant-bob-101',
+          status: 'active',
+        },
+      ],
+      created_at: '2026-10-15T10:00:00Z',
+      status: 'active',
+    }
+
+    it('renders recipient access list and active status badge for sender', async () => {
+      vi.mocked(fileService.list).mockResolvedValueOnce({
+        data: { packages: [sharedPackageWithRecipients], total: 1 } as any,
+      })
+
+      render(<FileList />)
+
+      await waitFor(() => {
+        expect(screen.getByText('defense_contract.pdf')).toBeDefined()
+        expect(screen.getByText('Sent by you')).toBeDefined()
+        expect(screen.getByText(/Recipients & Access Control \(1\)/i)).toBeDefined()
+        expect(screen.getByText('bob@example.com')).toBeDefined()
+        expect(screen.getByTestId('status-badge-active-grant-bob-101')).toBeDefined()
+        expect(screen.getByTestId('revoke-btn-grant-bob-101')).toBeDefined()
+      })
+    })
+
+    it('opens confirmation modal with warning and recipient details on revoke click', async () => {
+      vi.mocked(fileService.list).mockResolvedValueOnce({
+        data: { packages: [sharedPackageWithRecipients], total: 1 } as any,
+      })
+
+      render(<FileList />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('revoke-btn-grant-bob-101')).toBeDefined()
+      })
+
+      // Click revoke button
+      fireEvent.click(screen.getByTestId('revoke-btn-grant-bob-101'))
+
+      // Modal should appear
+      await waitFor(() => {
+        expect(screen.getByTestId('revoke-confirmation-modal')).toBeDefined()
+        expect(screen.getByText('Confirm Share Revocation')).toBeDefined()
+        expect(screen.getByText(/Are you sure you want to revoke access for/i)).toBeDefined()
+        expect(screen.getByTestId('cancel-revoke-btn')).toBeDefined()
+        expect(screen.getByTestId('confirm-revoke-btn')).toBeDefined()
+      })
+    })
+
+    it('dismisses confirmation modal when cancel button is clicked', async () => {
+      vi.mocked(fileService.list).mockResolvedValueOnce({
+        data: { packages: [sharedPackageWithRecipients], total: 1 } as any,
+      })
+
+      render(<FileList />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('revoke-btn-grant-bob-101')).toBeDefined()
+      })
+
+      fireEvent.click(screen.getByTestId('revoke-btn-grant-bob-101'))
+      expect(screen.getByTestId('revoke-confirmation-modal')).toBeDefined()
+
+      // Click cancel
+      fireEvent.click(screen.getByTestId('cancel-revoke-btn'))
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('revoke-confirmation-modal')).toBeNull()
+      })
+    })
+
+    it('successfully revokes grant, updates UI status to REVOKED, and shows toast', async () => {
+      vi.mocked(fileService.list).mockResolvedValueOnce({
+        data: { packages: [sharedPackageWithRecipients], total: 1 } as any,
+      })
+      vi.mocked(fileService.revokeGrant).mockResolvedValueOnce({} as any)
+
+      render(<FileList />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('revoke-btn-grant-bob-101')).toBeDefined()
+      })
+
+      // Open modal
+      fireEvent.click(screen.getByTestId('revoke-btn-grant-bob-101'))
+
+      // Confirm revocation
+      const confirmBtn = screen.getByTestId('confirm-revoke-btn')
+      fireEvent.click(confirmBtn)
+
+      await waitFor(() => {
+        expect(fileService.revokeGrant).toHaveBeenCalledWith('pkg-rev-101', 'grant-bob-101')
+        expect(screen.queryByTestId('revoke-confirmation-modal')).toBeNull()
+        expect(screen.getByTestId('status-badge-revoked-grant-bob-101')).toBeDefined()
+        expect(screen.getByText('REVOKED')).toBeDefined()
+        expect(screen.getByText('Access Revoked')).toBeDefined()
+        expect(screen.getByTestId('success-toast')).toBeDefined()
+        expect(
+          screen.getByText(/Access for bob@example.com has been successfully revoked/i)
+        ).toBeDefined()
+      })
+    })
+  })
 })
+

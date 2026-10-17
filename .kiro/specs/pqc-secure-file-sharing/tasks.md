@@ -204,25 +204,25 @@
 ## Phase 6: Share Revocation & Access Control
 
 ### 6.1 Revocation API
-- [ ] Implement `/files/{package_id}/grants/{grant_id}/revoke` POST endpoint
-- [ ] Validate sender authorization
-- [ ] Mark grant as revoked
-- [ ] Prevent future downloads via this grant
-- [ ] Return confirmation
-- [ ] Add tests
+- [x] Implement `/files/{package_id}/grants/{grant_id}/revoke` POST endpoint
+- [x] Validate sender authorization
+- [x] Mark grant as revoked
+- [x] Prevent future downloads via this grant
+- [x] Return confirmation
+- [x] Add tests
 
 ### 6.2 Access Control Layer
-- [ ] Implement authorization checks in all file endpoints
-- [ ] Check active grants for recipients
-- [ ] Verify grant status (not revoked)
-- [ ] Log access decisions (audit trail)
-- [ ] Add tests
+- [x] Implement authorization checks in all file endpoints
+- [x] Check active grants for recipients
+- [x] Verify grant status (not revoked)
+- [x] Log access decisions (audit trail)
+- [x] Add tests
 
 ### 6.3 Revocation UI
-- [ ] Create revoke button on sender's file list
-- [ ] Add confirmation dialog
-- [ ] Display revocation status
-- [ ] Add tests
+- [x] Create revoke button on sender's file list
+- [x] Add confirmation dialog
+- [x] Display revocation status
+- [x] Add tests
 
 ---
 

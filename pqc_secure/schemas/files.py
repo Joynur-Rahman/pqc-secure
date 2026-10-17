@@ -39,6 +39,23 @@ class RecipientInfo(BaseModel):
     recipient_id: str
     recipient_email: Optional[str] = None
     recipient_key_id: str
+    grant_id: Optional[str] = None
+    status: str = "active"
+    revoked_at: Optional[datetime] = None
+
+
+class AccessGrantResponse(BaseModel):
+    """Access grant response schema"""
+    id: str
+    grant_id: str
+    package_id: str
+    recipient_id: str
+    recipient_email: Optional[str] = None
+    status: str
+    created_at: datetime
+    revoked_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FilePackageResponse(BaseModel):

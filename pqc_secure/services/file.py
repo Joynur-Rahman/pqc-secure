@@ -22,6 +22,13 @@ from pqc_secure.db.models import (
     KeyStatus,
     User,
 )
+from pqc_secure.services.access_control import (
+    AccessControlService,
+    AccessDeniedError as ACAccessDeniedError,
+    GrantNotFoundError,
+    PackageNotFoundError as ACPackageNotFoundError,
+    UnauthorizedRevocationError,
+)
 from pqc_secure.services.audit import AuditService
 from pqc_secure.services.crypto import CryptoService, InvalidKeyError
 from pqc_secure.services.storage import storage_service
@@ -495,6 +502,28 @@ class FileService:
         return db.query(FilePackage).filter(FilePackage.id == package_id).first()
 
     @classmethod
+    def revoke_access_grant(
+        cls,
+        db: Session,
+        sender_id: str,
+        package_id: str,
+        grant_id: str,
+        reason: Optional[str] = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> AccessGrant:
+        """Revoke an access grant for a recipient. Enforces sender authorization and audit trail."""
+        return AccessControlService.revoke_grant(
+            db=db,
+            sender_id=sender_id,
+            package_id=package_id,
+            grant_id=grant_id,
+            reason=reason,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+
+    @classmethod
     def verify_manifest_signature(
         cls,
         db: Session,
@@ -580,29 +609,21 @@ class FileService:
 
         Returns (original_filename, plaintext_bytes).
         """
-        # 1. Fetch package
-        package = cls.get_package_by_id(db, package_id)
+        # 1 & 2. Access control check: validates package existence and active grant
+        is_authorized, reason, grant, package = AccessControlService.check_package_access(
+            db=db,
+            user_id=user_id,
+            package_id=package_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
         if not package:
             raise PackageNotFoundError(f"Package {package_id} not found")
+        if not is_authorized:
+            raise AccessDeniedError(reason)
 
-        # 2. Authorization check
         is_sender = (package.sender_id == user_id)
-        active_grant = None
-
-        if not is_sender:
-            active_grant = (
-                db.query(AccessGrant)
-                .filter(
-                    AccessGrant.package_id == package_id,
-                    AccessGrant.recipient_id == user_id,
-                    AccessGrant.status == GrantStatus.ACTIVE.value,
-                )
-                .first()
-            )
-            if not active_grant:
-                raise AccessDeniedError(
-                    f"Access denied: No active grant for user {user_id} on package {package_id}"
-                )
+        active_grant = grant
 
         # 3. Signature verification
         sig_valid = cls.verify_manifest_signature(db, package)

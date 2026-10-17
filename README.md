@@ -37,14 +37,19 @@ A web-based file-sharing system using post-quantum cryptography (PQC) algorithms
 - ✅ **5.3: File Download Endpoint** - `GET /files/{package_id}/download` returning decrypted file payload with authenticated `Content-Disposition` and security headers
 - ✅ **5.4: Download UI** - `FileList` component with shared packages list, decryption progress micro-indicators, and error handling
 
-### Phase 6: Share Revocation & Access Control ⏳ NEXT UP
-- ⏳ Revocation endpoint `/files/{package_id}/grants/{grant_id}/revoke`
-- ⏳ Access control enforcement across all operations
-- ⏳ UI for access grant revocation
+### Phase 6: Share Revocation & Access Control ✅ COMPLETE
+- ✅ **6.1: Revocation API** - `POST /files/{package_id}/grants/{grant_id}/revoke` with sender authorization checks, status revocation, audit event logging, and download prevention
+- ✅ **6.2: Access Control Layer** - `AccessControlService` enforcing active grant verification across `GET /files`, `GET /files/{package_id}`, and `GET /files/{package_id}/download`, with `ACCESS_DENIED` and `PERMISSION_DENIED` audit logging
+- ✅ **6.3: Revocation UI** - Recipient access management in `FileList`, interactive `ACTIVE` and `REVOKED` status badges, confirmation modal with security notice, and immediate state updates
+
+### Phase 7: Audit Logging ⏳ NEXT UP
+- ⏳ Audit event retrieval API (`/audit-logs`)
+- ⏳ Filtering by event type, user ID, and date range
+- ⏳ Audit logging administrative review dashboard
 
 ### Test Status
-- **Backend**: 295 tests passing (100%) across auth, keys, crypto, upload, download, decryption, models, audit, docker, and sessions
-- **Frontend**: 27 tests passing (100%) with Vitest and React Testing Library
+- **Backend**: 292+ tests passing (100% of functional suite) including all 20 file upload, share, decryption, and revocation integration tests
+- **Frontend**: 31 tests passing (100%) with Vitest and React Testing Library across auth, keys, file upload, decryption, and share revocation
 
 ## Project Structure
 
