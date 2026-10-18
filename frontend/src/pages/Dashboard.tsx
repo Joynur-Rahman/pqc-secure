@@ -40,7 +40,7 @@ export default function Dashboard() {
         <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Link
           to="/files/upload"
           className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all"
@@ -71,6 +71,17 @@ export default function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900">Shared Files</h3>
           <p className="text-sm text-gray-500 mt-2">
             View and manage your shared files
+          </p>
+        </Link>
+
+        <Link
+          to="/perf"
+          className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all"
+        >
+          <div className="text-3xl mb-4">⚡</div>
+          <h3 className="text-lg font-semibold text-gray-900">Performance</h3>
+          <p className="text-sm text-gray-500 mt-2">
+            Run benchmarks & compare PQC vs Classical primitives
           </p>
         </Link>
       </div>

@@ -248,25 +248,25 @@
 ## Phase 8: Performance Measurement & Evaluation
 
 ### 8.1 Performance Measurement Service
-- [ ] Implement timing measurement for key generation
-- [ ] Implement timing measurement for encapsulation/key agreement
-- [ ] Implement timing measurement for signing/verification
-- [ ] Implement timing measurement for encryption/decryption
-- [ ] Implement size measurement for keys, ciphertexts, signatures
-- [ ] Collect environment metadata (CPU, memory, OS, library versions)
-- [ ] Calculate median and percentile values (not just best run)
+- [x] Implement timing measurement for key generation
+- [x] Implement timing measurement for encapsulation/key agreement
+- [x] Implement timing measurement for signing/verification
+- [x] Implement timing measurement for encryption/decryption
+- [x] Implement size measurement for keys, ciphertexts, signatures
+- [x] Collect environment metadata (CPU, memory, OS, library versions)
+- [x] Calculate median and percentile values (not just best run)
 
 ### 8.2 Performance Evaluation Endpoints
-- [ ] Implement `/perf/benchmark` POST endpoint
-- [ ] Run configurable benchmark suite (PQC vs classical)
-- [ ] Return timing and size results with environment context
-- [ ] Add documentation on environment-dependent nature of results
+- [x] Implement `/perf/benchmark` POST endpoint
+- [x] Run configurable benchmark suite (PQC vs classical)
+- [x] Return timing and size results with environment context
+- [x] Add documentation on environment-dependent nature of results
 
 ### 8.3 Performance Dashboard
-- [ ] Create dashboard to display benchmark results
-- [ ] Show comparison between PQC and classical modes
-- [ ] Display environment information
-- [ ] Add filtering and export options
+- [x] Create dashboard to display benchmark results
+- [x] Show comparison between PQC and classical modes
+- [x] Display environment information
+- [x] Add filtering and export options
 
 ---
 

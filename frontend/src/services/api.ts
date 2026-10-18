@@ -1,4 +1,4 @@
-import { User, LoginResponse, AuditLog, AuditLogsResponse } from '../types'
+import { User, LoginResponse, AuditLog, AuditLogsResponse, BenchmarkResponse, BenchmarkRequest, EnvironmentMetadata } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10)
@@ -211,3 +211,16 @@ export const auditService = {
     return apiRequest<AuditLogsResponse>(`/audit-logs${query ? `?${query}` : ''}`)
   },
 }
+
+export const perfService = {
+  runBenchmark: (request?: BenchmarkRequest) =>
+    apiRequest<BenchmarkResponse>('/perf/benchmark', {
+      method: 'POST',
+      body: JSON.stringify(request || {}),
+    }),
+  getLatest: () =>
+    apiRequest<BenchmarkResponse>('/perf/latest'),
+  getEnvironment: () =>
+    apiRequest<EnvironmentMetadata>('/perf/environment'),
+}
+

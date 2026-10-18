@@ -12,7 +12,7 @@ from pqc_secure.core.logging import logger
 from pqc_secure.db.session import dispose_connection_pool, engine
 from pqc_secure.db.transaction import get_pool_status
 from pqc_secure.middleware.session import SessionValidationMiddleware
-from pqc_secure.api import auth, keys, files, audit
+from pqc_secure.api import auth, keys, files, audit, perf
 
 # Initialize logging
 logger.info(f"PQC-Secure starting up in {settings.environment} environment")
@@ -68,6 +68,8 @@ app.include_router(files.router)
 app.include_router(files.router, prefix="/api")
 app.include_router(audit.router)
 app.include_router(audit.router, prefix="/api")
+app.include_router(perf.router)
+app.include_router(perf.router, prefix="/api")
 
 
 @app.get("/health")

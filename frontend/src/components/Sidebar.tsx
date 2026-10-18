@@ -12,6 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Upload File', path: '/files/upload', icon: '📤' },
   { label: 'Shared Files', path: '/shared-files', icon: '📋' },
   { label: 'Manage Keys', path: '/keys', icon: '🔑' },
+  { label: 'Performance', path: '/perf', icon: '⚡' },
 ]
 
 export default function Sidebar() {
