@@ -63,3 +63,8 @@ Thumbs.db
 # Data
 data/
 uploads/
+
+# IDE Agents & Skills Cache
+.agents/
+.taste-skill/
+skills-lock.json

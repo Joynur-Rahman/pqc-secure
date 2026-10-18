@@ -122,24 +122,40 @@ export interface BenchmarkItem {
 }
 
 export interface EnvironmentMetadata {
-  cpu_model: string
-  cpu_cores: number
-  total_ram_gb: number
-  os_name: string
-  os_version: string
-  architecture: string
-  python_version: string
-  cryptography_version: string
-  pqc_backend: string
-  environment_notice: string
+  os?: string
+  os_name?: string
+  os_release?: string
+  os_version?: string
+  architecture?: string
+  cpu_model?: string
+  cpu_cores?: number
+  total_ram_gb?: number | null
+  total_memory_gb?: number | null
+  total_memory_mb?: number | null
+  python_version?: string
+  python_compiler?: string
+  cryptography_version?: string
+  pqc_backend?: string
+  is_native_oqs?: boolean
+  environment_notice?: string
 }
 
 export interface BenchmarkSummary {
-  pqc_total_time_ms: number
-  classical_total_time_ms: number
-  time_ratio: number
-  key_size_overhead_ratio: number
-  signature_size_overhead_ratio: number
+  pqc_total_time_ms?: number
+  classical_total_time_ms?: number
+  time_ratio?: number
+  time_overhead_ratio?: number
+  pqc_public_key_bytes?: number
+  classical_public_key_bytes?: number
+  key_size_overhead_ratio?: number
+  pqc_signature_bytes?: number
+  classical_signature_bytes?: number
+  signature_size_overhead_ratio?: number
+  pqc_ciphertext_bytes?: number
+  classical_ciphertext_bytes?: number
+  ciphertext_size_overhead_ratio?: number
+  fastest_keygen_algorithm?: string
+  fastest_signing_algorithm?: string
 }
 
 export interface BenchmarkResponse {

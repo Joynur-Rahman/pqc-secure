@@ -1,6 +1,6 @@
 """Application configuration"""
 from pydantic_settings import BaseSettings
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator
 from typing import Optional
 import logging
 
@@ -21,11 +21,18 @@ class Settings(BaseSettings):
     
     # Database Configuration
     database_url: str = Field(
-        default="postgresql://pqc_user:pqc_password@localhost:5432/pqc_secure",
+        default="postgresql+psycopg2://pqc_user:pqc_password@localhost:5432/pqc_secure",
         description="PostgreSQL database connection URL"
     )
     database_pool_size: int = Field(default=10, description="Database connection pool size")
     database_pool_recycle: int = Field(default=3600, description="Database connection recycle time in seconds")
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def normalize_database_url(cls, v: str) -> str:
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return v
     
     # Security Configuration
     secret_key: str = Field(

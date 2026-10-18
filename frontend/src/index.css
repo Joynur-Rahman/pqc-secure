@@ -1,1 +1,331 @@
 @import "tailwindcss";
+
+/* ==========================================================================
+   PQC-Secure Linear Obsidian Design System Tokens & Base Styles
+   Conforms to DESIGN.md
+   ========================================================================== */
+
+:root {
+  /* Canvas & Surfaces */
+  --bg-canvas: #08090a;
+  --bg-surface-0: #0c0d0e;
+  --bg-surface-1: #111214;
+  --bg-surface-2: #17191c;
+  --bg-surface-3: #1f2126;
+  --bg-surface-subtle: rgba(255, 255, 255, 0.03);
+
+  /* Hairline Borders */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --border-glow: rgba(94, 106, 210, 0.4);
+
+  /* Typography */
+  --text-primary: #f7f8f8;
+  --text-secondary: #a1a5ad;
+  --text-tertiary: #656a73;
+  --text-code: #7dd3fc;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Geist Mono', 'SF Mono', Consolas, monospace; /* taste-skill-ignore */
+
+  /* Cryptographic Semantic Roles */
+  --quantum-emerald: #10b981;
+  --quantum-emerald-glow: rgba(16, 185, 129, 0.18);
+  --quantum-emerald-border: rgba(16, 185, 129, 0.35);
+  --quantum-cyan: #06b6d4;
+  --quantum-cyan-glow: rgba(6, 182, 212, 0.18);
+
+  --primary-indigo: #10b981;
+  --primary-indigo-hover: #059669;
+  --primary-indigo-glow: rgba(16, 185, 129, 0.25);
+  --primary-indigo-subtle: rgba(16, 185, 129, 0.12);
+
+  --warning-amber: #f59e0b;
+  --warning-amber-glow: rgba(245, 158, 11, 0.16);
+  --warning-amber-border: rgba(245, 158, 11, 0.35);
+
+  --danger-rose: #f43f5e;
+  --danger-rose-glow: rgba(244, 63, 94, 0.2);
+  --danger-rose-border: rgba(244, 63, 94, 0.35);
+
+  /* Easing & Timing */
+  --ease-linear-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+}
+
+/* Base resets & typography */
+html,
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Obsidian Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Focus Ring */
+:focus-visible {
+  outline: 2px solid var(--primary-indigo) !important;
+  outline-offset: 2px !important;
+}
+
+/* Ambient canvas background */
+.pqc-bg-ambient {
+  background-color: #08090a;
+}
+
+.pqc-hero-glow {
+  display: none;
+}
+
+.pqc-border-gradient {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface-1);
+}
+
+/* ==========================================================================
+   Taste Skill Design System Utilities
+   Clean, anti-slop, discipline-first architecture
+   ========================================================================== */
+
+/* Cards & Surfaces */
+.pqc-card {
+  background: #111317;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  transition: border-color var(--duration-fast) var(--ease-linear-spring);
+}
+.pqc-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.pqc-card-elevated {
+  background: #161920;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+.pqc-card-interactive {
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-linear-spring), transform var(--duration-fast) var(--ease-linear-spring);
+}
+.pqc-card-interactive:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Quantum Emerald Focus */
+.pqc-card-quantum {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+/* Buttons */
+.pqc-btn-primary {
+  background: #f4f5f6;
+  color: #08090a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--ease-linear-spring), transform var(--duration-fast) var(--ease-linear-spring);
+}
+.pqc-btn-primary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+.pqc-btn-primary:active:not(:disabled) {
+  transform: scale(0.985);
+}
+.pqc-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pqc-btn-secondary {
+  background: #181b22;
+  color: #f4f5f6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-linear-spring), border-color var(--duration-fast) var(--ease-linear-spring);
+}
+.pqc-btn-secondary:hover:not(:disabled) {
+  background: #21252e;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pqc-btn-secondary:active:not(:disabled) {
+  transform: scale(0.985);
+}
+.pqc-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pqc-btn-danger {
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+  border: 1px solid var(--danger-rose-border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color var(--duration-fast) var(--ease-linear-spring), border-color var(--duration-fast) var(--ease-linear-spring), transform var(--duration-fast) var(--ease-linear-spring);
+  cursor: pointer;
+}
+.pqc-btn-danger:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: #f43f5e;
+}
+.pqc-btn-danger:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+/* Badges & Pills */
+.pqc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.pqc-badge-quantum {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.pqc-badge-cyan {
+  background: rgba(6, 182, 212, 0.12);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+.pqc-badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.pqc-badge-danger {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.pqc-badge-subtle {
+  background: var(--bg-surface-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Glowing Pulsing Status Dot */
+.pqc-dot-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--quantum-emerald);
+  animation: pqc-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pqc-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+/* Monospace & Fingerprint Containers */
+.pqc-mono {
+  font-family: var(--font-mono); /* taste-skill-ignore */
+  letter-spacing: -0.02em;
+}
+.pqc-code-pill {
+  font-family: var(--font-mono); /* taste-skill-ignore */
+  font-size: 11px;
+  background: var(--bg-surface-0);
+  border: 1px solid var(--border-subtle);
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--text-code);
+}
+
+/* Form Controls */
+.pqc-input {
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  width: 100%;
+  transition: border-color var(--duration-fast) var(--ease-linear-spring);
+}
+.pqc-input:focus {
+  border-color: var(--primary-indigo);
+  outline: none;
+}
+.pqc-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Table styling */
+.pqc-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.pqc-table th {
+  background: var(--bg-surface-0);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+.pqc-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.pqc-table tr:hover td {
+  background: var(--bg-surface-subtle);
+  color: var(--text-primary);
+}

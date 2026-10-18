@@ -239,52 +239,28 @@ export const FileList: React.FC = () => {
   }
 
   return (
-    <div
-      style={{
-        maxWidth: '980px',
-        margin: '0 auto',
-        padding: '2rem 1rem',
-        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      }}
-    >
+    <div data-ui="file-list" className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Header Banner */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
-          borderRadius: '16px',
-          padding: '2rem',
-          color: '#ffffff',
-          boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.4)',
-          marginBottom: '2rem',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="pqc-card p-6 bg-[#0c0d0e] border border-white/[0.08]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '1.75rem' }}>🔐</span>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: '700', margin: 0, letterSpacing: '-0.02em' }}>
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
                 Shared Files & Access Control
               </h1>
+              <span className="pqc-badge pqc-badge-quantum text-[10px] py-0.5">Encrypted Store</span>
             </div>
-            <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>
+            <p className="text-xs text-neutral-400">
               Manage post-quantum packages, grant share revocations, and authenticate end-to-end decryptions.
             </p>
           </div>
           <button
             onClick={loadFiles}
             disabled={loading}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
-              padding: '0.6rem 1.2rem',
-              borderRadius: '8px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontWeight: '500',
-              fontSize: '0.9rem',
-              backdropFilter: 'blur(8px)',
-              transition: 'background 0.2s',
-            }}
+            className="pqc-btn-secondary text-xs py-1.5 px-3.5 self-start sm:self-auto shrink-0"
           >
             {loading ? 'Refreshing...' : '↻ Refresh'}
           </button>
@@ -295,35 +271,19 @@ export const FileList: React.FC = () => {
       {successToast && (
         <div
           data-testid="success-toast"
-          style={{
-            background: '#f0fdf4',
-            border: '1px solid #86efac',
-            color: '#166534',
-            padding: '1rem',
-            borderRadius: '10px',
-            marginBottom: '1.5rem',
-            fontSize: '0.95rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-          }}
+          className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>✅</span>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
             <span>{successToast}</span>
           </div>
           <button
             onClick={() => setSuccessToast(null)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#166534',
-              fontWeight: '700',
-            }}
+            className="text-emerald-400 hover:text-emerald-200 font-bold ml-2 cursor-pointer"
           >
-            ✕
+            ×
           </button>
         </div>
       )}
@@ -332,72 +292,48 @@ export const FileList: React.FC = () => {
       {error && (
         <div
           data-testid="error-banner"
-          style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#991b1b',
-            padding: '1rem',
-            borderRadius: '10px',
-            marginBottom: '1.5rem',
-            fontSize: '0.95rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-          }}
+          className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2"
         >
-          <span>⚠️</span>
+          <svg className="w-4 h-4 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
           <span>{error}</span>
         </div>
       )}
 
       {/* Files List Container */}
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '16px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            padding: '1.25rem 1.5rem',
-            borderBottom: '1px solid #f1f5f9',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <h2 style={{ fontSize: '1.15rem', fontWeight: '600', color: '#1e293b', margin: 0 }}>
+      <div className="pqc-card overflow-hidden">
+        <div className="px-5 py-3.5 bg-[#0c0d0e]/80 flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-neutral-300">
             Available Encrypted Packages ({files.length})
           </h2>
+          <span className="text-[11px] text-neutral-400 font-medium">Zero-Trust Manifests</span>
         </div>
 
         {loading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>⏳</div>
-            <p style={{ margin: 0, fontWeight: '500' }}>Loading shared packages...</p>
+          <div className="text-center py-12 space-y-2 text-xs text-neutral-400">
+            <span className="pqc-dot-pulse inline-block"></span>
+            <p className="font-medium">Loading shared packages...</p>
           </div>
         ) : files.length === 0 ? (
           <div
             data-testid="no-files-message"
-            style={{
-              padding: '3.5rem 1.5rem',
-              textAlign: 'center',
-              color: '#64748b',
-            }}
+            className="text-center py-14 space-y-2"
           >
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#334155', margin: '0 0 0.5rem 0' }}>
+            <div className="w-10 h-10 mx-auto rounded-lg bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-neutral-400 mb-2">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+            </div>
+            <h3 className="text-xs font-semibold text-neutral-300">
               No shared files found
             </h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>
+            <p className="text-xs text-neutral-400 max-w-sm mx-auto">
               Files encrypted for you or sent by your account will appear here.
             </p>
           </div>
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className="space-y-1">
             {files.map((file) => {
               const pkgId = file.package_id || file.id
               const status = downloadStatus[pkgId] || { downloading: false, progress: '' }
@@ -410,82 +346,49 @@ export const FileList: React.FC = () => {
                 <li
                   key={pkgId}
                   data-testid={`file-row-${pkgId}`}
-                  style={{
-                    padding: '1.5rem',
-                    borderBottom: '1px solid #f1f5f9',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
-                  }}
+                  className="p-5 flex flex-col gap-3 hover:bg-white/[0.02] transition-colors"
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                      <div
-                        style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '12px',
-                          background: isPqc ? '#eef2ff' : '#ecfdf5',
-                          color: isPqc ? '#4f46e5' : '#059669',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.5rem',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {isPqc ? '🛡️' : '🔒'}
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border ${
+                        isPqc
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                          : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                      }`}>
+                        {isPqc ? (
+                          <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        )}
                       </div>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span
                             data-testid={`filename-${pkgId}`}
-                            style={{ fontWeight: '600', color: '#0f172a', fontSize: '1.05rem' }}
+                            className="text-sm font-semibold text-white tracking-tight"
                           >
                             {file.original_filename || `Package-${pkgId.slice(0, 8)}`}
                           </span>
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              padding: '0.2rem 0.55rem',
-                              borderRadius: '9999px',
-                              background: isPqc ? '#e0e7ff' : '#d1fae5',
-                              color: isPqc ? '#3730a3' : '#065f46',
-                            }}
-                          >
+                          <span className={`pqc-badge ${isPqc ? 'pqc-badge-quantum' : 'pqc-badge-warning'} text-[10px] py-0.5`}>
                             {isPqc ? 'NIST PQC (ML-KEM / ML-DSA)' : 'Classical (X25519 / Ed25519)'}
                           </span>
                           {isSender && (
                             <span
                               data-testid={`sender-badge-${pkgId}`}
-                              style={{
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                padding: '0.2rem 0.55rem',
-                                borderRadius: '9999px',
-                                background: '#f1f5f9',
-                                color: '#475569',
-                                border: '1px solid #cbd5e1',
-                              }}
+                              className="pqc-badge pqc-badge-subtle text-[10px] py-0.5"
                             >
                               Sent by you
                             </span>
                           )}
                         </div>
-                        <div
-                          style={{
-                            fontSize: '0.85rem',
-                            color: '#64748b',
-                            marginTop: '0.25rem',
-                            display: 'flex',
-                            gap: '0.85rem',
-                            flexWrap: 'wrap',
-                          }}
-                        >
-                          <span>Sender: <strong>{file.sender_email || 'Authenticated User'}</strong></span>
+                        <div className="text-[11px] text-neutral-400 flex flex-wrap items-center gap-2">
+                          <span>Sender: <code className="text-neutral-300 font-medium">{file.sender_email || 'Authenticated User'}</code></span>
                           <span>•</span>
-                          <span>Size: <strong>{formatFileSize(file.file_size)}</strong></span>
+                          <span>Size: <code className="text-neutral-300 font-medium">{formatFileSize(file.file_size)}</code></span>
                           <span>•</span>
                           <span>Created: {formatDate(file.created_at)}</span>
                         </div>
@@ -497,34 +400,18 @@ export const FileList: React.FC = () => {
                       data-testid={`download-button-${pkgId}`}
                       onClick={() => handleDownload(file)}
                       disabled={status.downloading}
-                      style={{
-                        padding: '0.65rem 1.35rem',
-                        borderRadius: '8px',
-                        background: status.downloading
-                          ? '#cbd5e1'
-                          : isPqc
-                          ? '#4f46e5'
-                          : '#059669',
-                        color: '#ffffff',
-                        border: 'none',
-                        cursor: status.downloading ? 'not-allowed' : 'pointer',
-                        fontWeight: '600',
-                        fontSize: '0.9rem',
-                        boxShadow: status.downloading ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        transition: 'opacity 0.2s',
-                      }}
+                      className="pqc-btn-primary text-xs py-2 px-4 shrink-0 flex items-center gap-1.5"
                     >
                       {status.downloading ? (
                         <>
-                          <span style={{ animation: 'spin 1s linear infinite' }}>⏳</span>
+                          <span className="pqc-dot-pulse"></span>
                           <span>Decrypting...</span>
                         </>
                       ) : (
                         <>
-                          <span>⬇️</span>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
                           <span>Decrypt & Download</span>
                         </>
                       )}
@@ -535,19 +422,9 @@ export const FileList: React.FC = () => {
                   {status.downloading && (
                     <div
                       data-testid={`progress-${pkgId}`}
-                      style={{
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        padding: '0.6rem 1rem',
-                        fontSize: '0.85rem',
-                        color: '#334155',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                      }}
+                      className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2"
                     >
-                      <span style={{ color: '#4f46e5' }}>⚙️</span>
+                      <span className="pqc-dot-pulse"></span>
                       <span>{status.progress}</span>
                     </div>
                   )}
@@ -555,19 +432,11 @@ export const FileList: React.FC = () => {
                   {status.success && (
                     <div
                       data-testid={`success-${pkgId}`}
-                      style={{
-                        background: '#f0fdf4',
-                        border: '1px solid #bbf7d0',
-                        borderRadius: '8px',
-                        padding: '0.6rem 1rem',
-                        fontSize: '0.85rem',
-                        color: '#15803d',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                      }}
+                      className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2"
                     >
-                      <span>✅</span>
+                      <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                       <span>{status.progress}</span>
                     </div>
                   )}
@@ -575,56 +444,37 @@ export const FileList: React.FC = () => {
                   {status.error && (
                     <div
                       data-testid={`error-${pkgId}`}
-                      style={{
-                        background: '#fef2f2',
-                        border: '1px solid #fecaca',
-                        borderRadius: '8px',
-                        padding: '0.6rem 1rem',
-                        fontSize: '0.85rem',
-                        color: '#b91c1c',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                      }}
+                      className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2"
                     >
-                      <span>❌</span>
+                      <svg className="w-4 h-4 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                       <span>{status.error}</span>
                     </div>
                   )}
 
                   {/* Recipient Access Management Section (Phase 6: Task 6.3) */}
                   {recipients.length > 0 && (
-                    <div
-                      style={{
-                        marginTop: '0.25rem',
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '0.85rem 1rem',
-                      }}
-                    >
+                    <div className="mt-1 bg-[#0c0d0e]/60 border border-white/[0.06] rounded-lg p-3 space-y-2">
                       <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          cursor: 'pointer',
-                        }}
+                        className="flex justify-between items-center cursor-pointer select-none"
                         onClick={() => toggleRecipients(pkgId)}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '0.9rem' }}>👥</span>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#334155' }}>
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-neutral-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                          <span className="text-xs font-semibold text-neutral-300">
                             Recipients & Access Control ({recipients.length})
                           </span>
                         </div>
-                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        <span className="text-[11px] text-neutral-400">
                           {isExpanded ? '▲ Hide' : '▼ Show'}
                         </span>
                       </div>
 
                       {isExpanded && (
-                        <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div className="space-y-1.5 pt-1">
                           {recipients.map((rec) => {
                             const isRevoked = rec.status === 'revoked'
                             const grantId = rec.grant_id || rec.recipient_id
@@ -633,41 +483,23 @@ export const FileList: React.FC = () => {
                               <div
                                 key={grantId}
                                 data-testid={`recipient-row-${grantId}`}
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  padding: '0.5rem 0.75rem',
-                                  background: '#ffffff',
-                                  borderRadius: '6px',
-                                  border: '1px solid #e2e8f0',
-                                  flexWrap: 'wrap',
-                                  gap: '0.5rem',
-                                }}
+                                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 rounded bg-white/[0.02] border border-white/[0.04]"
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                  <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#1e293b' }}>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <code className="text-xs text-neutral-200">
                                     {rec.recipient_email || `Recipient ID: ${rec.recipient_id.slice(0, 8)}`}
-                                  </span>
+                                  </code>
 
                                   {/* Status badge */}
                                   <span
                                     data-testid={isRevoked ? `status-badge-revoked-${grantId}` : `status-badge-active-${grantId}`}
-                                    style={{
-                                      fontSize: '0.7rem',
-                                      fontWeight: '700',
-                                      padding: '0.15rem 0.5rem',
-                                      borderRadius: '4px',
-                                      background: isRevoked ? '#fee2e2' : '#dcfce7',
-                                      color: isRevoked ? '#991b1b' : '#15803d',
-                                      letterSpacing: '0.02em',
-                                    }}
+                                    className={`pqc-badge ${isRevoked ? 'pqc-badge-danger' : 'pqc-badge-quantum'} text-[10px] py-0 px-2`}
                                   >
                                     {isRevoked ? 'REVOKED' : 'ACTIVE'}
                                   </span>
 
                                   {isRevoked && rec.revoked_at && (
-                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                    <span className="text-[11px] text-neutral-400">
                                       (Revoked: {formatDate(rec.revoked_at)})
                                     </span>
                                   )}
@@ -677,7 +509,7 @@ export const FileList: React.FC = () => {
                                 {isSender && (
                                   <div>
                                     {isRevoked ? (
-                                      <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                                      <span className="text-xs text-neutral-400 italic">
                                         Access Revoked
                                       </span>
                                     ) : (
@@ -691,19 +523,12 @@ export const FileList: React.FC = () => {
                                             file.original_filename || `Package ${pkgId.slice(0, 8)}`
                                           )
                                         }
-                                        style={{
-                                          background: '#fff1f2',
-                                          color: '#e11d48',
-                                          border: '1px solid #fecdd3',
-                                          padding: '0.35rem 0.85rem',
-                                          borderRadius: '6px',
-                                          fontSize: '0.8rem',
-                                          fontWeight: '600',
-                                          cursor: 'pointer',
-                                          transition: 'background 0.2s',
-                                        }}
+                                        className="pqc-btn-danger text-[11px] py-0.5 px-2 flex items-center gap-1"
                                       >
-                                        🚫 Revoke Access
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                        <span>Revoke Access</span>
                                       </button>
                                     )}
                                   </div>
@@ -728,86 +553,48 @@ export const FileList: React.FC = () => {
           role="dialog"
           aria-modal="true"
           data-testid="revoke-confirmation-modal"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '1rem',
-          }}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
         >
-          <div
-            style={{
-              background: '#ffffff',
-              borderRadius: '16px',
-              padding: '2rem',
-              maxWidth: '480px',
-              width: '100%',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '1.75rem' }}>⚠️</span>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: '#0f172a' }}>
+          <div className="pqc-card pqc-card-elevated max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-2 text-rose-400">
+              <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="text-sm font-semibold text-white">
                 Confirm Share Revocation
               </h3>
             </div>
 
-            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.5', margin: '0 0 1.25rem 0' }}>
+            <p className="text-xs text-neutral-300 leading-relaxed">
               Are you sure you want to revoke access for{' '}
-              <strong style={{ color: '#0f172a' }}>{revocationModal.recipientEmail}</strong> to{' '}
-              <strong style={{ color: '#0f172a' }}>{revocationModal.filename}</strong>?
+              <code className="text-white font-medium">{revocationModal.recipientEmail}</code> to{' '}
+              <strong className="text-white">{revocationModal.filename}</strong>?
             </p>
 
-            <div
-              style={{
-                background: '#fff1f2',
-                border: '1px solid #ffe4e6',
-                borderRadius: '8px',
-                padding: '0.85rem',
-                color: '#9f1239',
-                fontSize: '0.85rem',
-                marginBottom: '1.5rem',
-              }}
-            >
-              🔒 <strong>Security Notice:</strong> The recipient's access grant will be permanently marked as revoked in the database and audit trail. Future attempts to download or decrypt this package will be strictly rejected.
+            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs leading-relaxed flex items-start gap-2">
+              <svg className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <div>
+                <strong>Security Notice:</strong> The recipient's access grant will be permanently marked as revoked in the database and audit trail. Future attempts to download or decrypt this package will be strictly rejected.
+              </div>
             </div>
 
             {revocationModal.error && (
-              <div
-                style={{
-                  background: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  color: '#991b1b',
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  marginBottom: '1.25rem',
-                  fontSize: '0.85rem',
-                }}
-              >
-                ❌ {revocationModal.error}
+              <div className="p-2.5 rounded-lg bg-rose-500/20 text-rose-300 text-xs flex items-center gap-1.5">
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span>{revocationModal.error}</span>
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 data-testid="cancel-revoke-btn"
                 onClick={() => setRevocationModal(null)}
                 disabled={revocationModal.revoking}
-                style={{
-                  padding: '0.6rem 1.25rem',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#475569',
-                  fontWeight: '600',
-                  fontSize: '0.9rem',
-                  cursor: revocationModal.revoking ? 'not-allowed' : 'pointer',
-                }}
+                className="pqc-btn-secondary text-xs py-1.5 px-3.5"
               >
                 Cancel
               </button>
@@ -815,19 +602,7 @@ export const FileList: React.FC = () => {
                 data-testid="confirm-revoke-btn"
                 onClick={handleConfirmRevoke}
                 disabled={revocationModal.revoking}
-                style={{
-                  padding: '0.6rem 1.25rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: '#e11d48',
-                  color: '#ffffff',
-                  fontWeight: '600',
-                  fontSize: '0.9rem',
-                  cursor: revocationModal.revoking ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
+                className="pqc-btn-danger text-xs py-1.5 px-3.5"
               >
                 {revocationModal.revoking ? 'Revoking...' : 'Confirm Revoke'}
               </button>
