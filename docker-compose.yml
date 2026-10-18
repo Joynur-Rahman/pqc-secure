@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -18,6 +20,26 @@ services:
     networks:
       - pqc_network
 
+  minio:
+    image: minio/minio:latest
+    container_name: pqc-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/minio_data
+    command: server /minio_data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pqc_network
+
   backend:
     build:
       context: .
@@ -27,8 +49,10 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg2://pqc_user:pqc_password@postgres:5432/pqc_secure
+      DATABASE_URL: postgresql://pqc_user:pqc_password@postgres:5432/pqc_secure
+      STORAGE_TYPE: s3
       STORAGE_PATH: /app/uploads
+      MINIO_ENDPOINT: minio:9000
       SECRET_KEY: your-secret-key-change-in-production
       ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:3001,http://localhost"
     ports:
@@ -54,6 +78,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  minio_data:
     driver: local
   uploads_data:
     driver: local

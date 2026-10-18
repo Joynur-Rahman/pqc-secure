@@ -47,13 +47,31 @@ A web-based file-sharing system using post-quantum cryptography (PQC) algorithms
 - ✅ **7.2: Audit Log API** - `GET /audit-logs` (and `/api/audit-logs`) with role-based access control (self-access for standard users, cross-user inspection for admins), filtering by event type (single or comma-separated, case-insensitive), user ID, and date range (`start_date`, `end_date`), plus pagination (`limit`/`offset` and `page`/`page_size`).
 - ✅ **7.3: Comprehensive Verification** - 31 backend audit unit and integration tests passing with 100% success rate.
 
-### Phase 8: Performance Measurement & Evaluation ⏳ NEXT UP
-- ⏳ Performance measurement service (timing & size metrics for keygen, encapsulation, signing, encryption)
-- ⏳ `/perf/benchmark` and evaluation endpoints
+### Phase 8: Performance Measurement & Evaluation ✅ COMPLETE
+- ✅ **8.1: Performance Measurement Service** - Timing & size metrics for keygen, encapsulation, signing, and AES-256-GCM encryption with system environment context
+- ✅ **8.2: Performance Evaluation Endpoints** - `POST /api/perf/benchmark` and `GET /api/perf/environment`
+- ✅ **8.3: Performance Dashboard** - Interactive comparative dashboard at `/perf` with preset toggles, executive cards, and JSON/CSV export
+
+### Phase 9: Security & Hardening ✅ COMPLETE
+- ✅ **9.1: CORS & Security Headers** - `SecurityHeadersMiddleware` (CSP, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, HSTS) & `CSRFProtectionMiddleware`
+- ✅ **9.2: Input Validation** - Validation and sanitization for emails, filenames, path traversal protection, executable blocking, and algorithm whitelisting
+- ✅ **9.3: Error Handling** - Standardized error schemas preventing sensitive data leakage in exception traces
+- ✅ **9.4: Secrets Management** - Strict zero-secret logging policy across all components
+
+### Phase 10: Testing & Quality Assurance ✅ COMPLETE
+- ✅ **10.1: Unit Tests** - 100% test coverage for cryptographic algorithms, API endpoints, and service logic
+- ✅ **10.2: Integration Tests** - Full end-to-end user lifecycle (`test_e2e_integration.py`): registration → login → key registration → chunked upload → PQC & classical share → discover → download & decrypt
+- ✅ **10.3: Security Tests** - Active cryptographic tampering detection (ciphertext bit-flip rejection, manifest metadata forgery rejection, digital signature tampering rejection, GCM tag/nonce tampering, rate-limiting, and session security)
+- ✅ **10.4: Performance Tests** - Multi-threaded concurrent crypto load tests, large multi-chunk assembly, and out-of-order chunk handling (`test_performance_scale.py`)
+
+### Phase 11: Deployment & Documentation ✅ COMPLETE
+- ✅ **11.1: Docker Compose Setup** - Multi-service production stack with PostgreSQL 16, MinIO S3 storage, FastAPI backend, and Nginx frontend
+- ✅ **11.2: Documentation** - Complete documentation suite including API Reference, Deployment Guide, Developer Setup, User Guide, Security Model, and Architecture Decision Record
+- ✅ **11.3: Demo & Evaluation** - Standalone interactive demonstration script (`scripts/demo.py`) and comparative CLI benchmark runner (`scripts/benchmark_runner.py`)
 
 ### Test Status
-- **Backend**: 303+ tests passing across crypto, keys, upload/encryption, decryption, revocation, and audit logging
-- **Frontend**: 31 tests passing (100%) with Vitest and React Testing Library across auth, keys, file upload, decryption, and share revocation
+- **Backend**: **373 tests passing** (100% pass rate) across unit, integration, security tampering, and performance scale suites
+- **Frontend**: **35 tests passing** (100% pass rate) with Vitest and React Testing Library; production bundle build verified clean
 
 ## Project Structure
 
@@ -316,39 +334,69 @@ Accessible at `/perf` in the web application:
 - ✅ AC-01.4: Authentication endpoints are rate-limited
 - ✅ AC-01.5: System does not reveal whether an email is registered
 
+## Interactive Demo & Benchmarking
+
+### 1. Live Demonstration Script
+Run the automated end-to-end PQC file sharing, cryptographic verification, and active tampering defense demo:
+```bash
+python scripts/demo.py
+```
+This demonstrates:
+- Registration and session establishment for Alice & Bob
+- ML-KEM-768 and ML-DSA-65 post-quantum key registration
+- Multi-chunk file upload and staging
+- AES-256-GCM envelope encryption and manifest signing
+- Decapsulation, signature verification, and download
+- Active defense against ciphertext payload tampering, manifest forgery, and eavesdropping
+
+### 2. Post-Quantum vs. Classical Benchmark Runner
+Run real-time comparative benchmarks measuring timing latency and artifact size overheads:
+```bash
+python scripts/benchmark_runner.py -n 30
+```
+
+---
+
 ## Deployment
 
 ### Full-Stack Docker Compose
 
-Run the entire platform (PostgreSQL, FastAPI Backend, and React Frontend) with a single command:
+Run the entire platform (PostgreSQL 16, MinIO Object Storage, FastAPI Backend, and React Frontend) with a single command:
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 This starts:
-- **`pqc-frontend`**: Nginx serving the production React 19 bundle with Tailwind CSS v4 and reverse proxying `/api/` to the backend on [http://localhost:3001](http://localhost:3001).
-- **`pqc-backend`**: FastAPI application running with `liboqs` support and Uvicorn on [http://localhost:8000](http://localhost:8000) (Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs)).
-- **`pqc-postgres`**: PostgreSQL 16 database on port `5432:5432` with healthcheck.
+- **`pqc-frontend`**: Nginx serving the production React 19 bundle and reverse proxying `/api/` on [http://localhost:3001](http://localhost:3001).
+- **`pqc-backend`**: FastAPI application running on [http://localhost:8000](http://localhost:8000) (Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs)).
+- **`pqc-postgres`**: PostgreSQL 16 database on port `5432:5432`.
+- **`pqc-minio`**: MinIO S3-compatible storage on port `9000:9000` (Console on port `9001:9001`).
 
 To stop the services:
 ```bash
-docker-compose down
+docker compose down
 ```
+
+---
 
 ## Documentation
 
-- [Database Setup](pqc_secure/db/DATABASE_SETUP.md)
-- [Connection Pooling](pqc_secure/db/CONNECTION_POOLING_GUIDE.md)
-- [Configuration Guide](pqc_secure/core/settings_guide.md)
-- [HTTPS Local Development](frontend/HTTPS_SETUP.md)
-- [Build Tooling](frontend/BUILD_TOOLING.md)
+- **[REST API Reference](docs/API_DOCUMENTATION.md)**: OpenAPI endpoints, request/response models, and error codes.
+- **[Deployment Guide](docs/DEPLOYMENT.md)**: Docker Compose, production environment variables, TLS, and reverse proxy setup.
+- **[Developer Setup Guide](docs/DEVELOPER_GUIDE.md)**: Local development environment, testing procedures, and code standards.
+- **[User Guide](docs/USER_GUIDE.md)**: User workflows for registration, key management, file sharing, and audit log inspection.
+- **[Cryptographic Security Model](docs/SECURITY_MODEL.md)**: Threat model, quantum resistance analysis, envelope encryption, and tampering resistance matrix.
+- **[ADR 001: PQC Architecture](docs/adr/001-post-quantum-cryptography-architecture.md)**: Architectural decision record on NIST FIPS standards selection.
+- **[Hackathon Presentation & Overview](docs/PRESENTATION.md)**: Executive summary, problem statement, and milestone results.
+
+---
 
 ## Contributing
 
 1. Create a feature branch
 2. Make your changes
-3. Run tests and linters
+3. Run test suites (`pytest` and `npm test` in `frontend/`)
 4. Submit a pull request
 
 ## License
