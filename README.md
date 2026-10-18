@@ -270,17 +270,18 @@ Create new migration:
 alembic revision --autogenerate -m "description"
 ```
 
-## Security Features
+## Security Features & Hardening
 
-- ✅ Passwords hashed with Argon2id (configurable to bcrypt)
-- ✅ Email validation and normalization (lowercase, trimmed)
-- ✅ Email uniqueness enforcement (case-insensitive)
-- ✅ JWT-based session tokens
-- ✅ Rate limiting on authentication endpoints (5 req/min)
-- ✅ CORS configured for trusted origins
-- ✅ HTTPS-only secure cookies
-- ✅ Audit logging of authentication events
-- ✅ No secrets logged (passwords, tokens, keys)
+- ✅ **Password Security**: Passwords hashed with Argon2id (configurable to bcrypt) with complexity validation
+- ✅ **Input Sanitization**: HTML tags and scripts stripped from text inputs; path traversal (`../`) and null bytes neutralized on filenames
+- ✅ **Email Validation**: Strict RFC 5322 format validation and lowercase normalization
+- ✅ **File Upload Security**: Dangerous executable and script extensions (`.exe`, `.bat`, `.cmd`, `.sh`, `.ps1`, `.vbs`, `.msi`, `.dll`) blocked; file size limits strictly enforced
+- ✅ **Algorithm Enforcement**: Primitive selections strictly validated against allowed cryptographic algorithms (ML-KEM-768, ML-DSA-65, X25519, Ed25519, AES-256-GCM)
+- ✅ **Defensive Security Headers**: Automatically attached to all responses (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, `Content-Security-Policy`, and HSTS `Strict-Transport-Security`)
+- ✅ **Strict CORS & CSRF Protection**: CORS restricted to configured allowed origins; CSRF validation enforced for cookie-authenticated state-changing operations
+- ✅ **Information Disclosure Prevention**: Standardized error responses (`detail`, `status_code`, `error`); internal stack traces and database schemas never exposed to clients
+- ✅ **Zero-Trust Secrets Management**: Private keys, shared secrets, nonces, and plaintext are never logged or stored insecurely; logging uses `SecretFilteringFormatter` to automatically redact credential patterns
+- ✅ **Secure Session Handling**: JWT session tokens with `HttpOnly`, `SameSite=Lax`, and `Secure` cookie attributes
 
 ## Performance Measurement & Evaluation
 

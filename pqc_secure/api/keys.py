@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from pqc_secure.api.deps import get_current_active_user, get_db
+from pqc_secure.core.validation import sanitize_text, validate_algorithm_selection
 from pqc_secure.db.models import CryptographicKey, User
 from pqc_secure.schemas.keys import (
     KeyListResponse,
@@ -54,10 +55,11 @@ async def register_key(
     user_agent = request.headers.get("user-agent")
 
     try:
+        norm_alg = validate_algorithm_selection(body.algorithm)
         key = KeyService.register_key(
             db=db,
             user_id=current_user.id,
-            algorithm=body.algorithm,
+            algorithm=norm_alg,
             public_key_b64=body.public_key_material,
             key_type=body.key_type or "public",
             private_key_b64=body.private_key_material,
@@ -65,7 +67,7 @@ async def register_key(
             user_agent=user_agent,
         )
         return _format_key_response(key)
-    except InvalidKeyError as e:
+    except (InvalidKeyError, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
@@ -172,7 +174,8 @@ async def revoke_key(
     """Revoke a key to prevent it from being used for future file shares."""
     client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
-    reason = body.reason if body else None
+    raw_reason = body.reason if body else None
+    reason = sanitize_text(raw_reason, max_length=500) if raw_reason else None
 
     try:
         key = KeyService.revoke_key(
