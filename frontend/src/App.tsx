@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import KeysPage from './pages/Keys'
 import UploadPage from './pages/Upload'
 import SharedFilesPage from './pages/SharedFiles'
+import PerformanceDashboard from './pages/PerformanceDashboard'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './hooks/useAuth'
@@ -55,6 +56,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <SharedFilesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="perf"
+            element={
+              <ProtectedRoute>
+                <PerformanceDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="performance"
+            element={
+              <ProtectedRoute>
+                <PerformanceDashboard />
               </ProtectedRoute>
             }
           />

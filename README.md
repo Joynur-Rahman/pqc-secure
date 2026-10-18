@@ -282,6 +282,29 @@ alembic revision --autogenerate -m "description"
 - ✅ Audit logging of authentication events
 - ✅ No secrets logged (passwords, tokens, keys)
 
+## Performance Measurement & Evaluation
+
+Empirical benchmarking suite comparing Post-Quantum Cryptography (ML-KEM-768, ML-DSA-65) against Classical primitives (X25519, Ed25519) and AES-256-GCM symmetric authenticated encryption.
+
+### Performance Features
+- **Timing Benchmarks**: High-resolution latency profiling with percentiles (`p50` median, `p90`, `p95`, `p99`, `min`, `max`, `mean`, `std_dev`).
+- **Cryptographic Size Telemetry**: Public/private key sizes, ciphertext sizes, signature footprints, shared secret sizes, and framing overhead.
+- **Environment Context**: Automatic telemetry collection for CPU model, core count, physical RAM, OS & architecture, Python version, cryptography version, and PQC backend engine.
+- **Environment Disclaimer**: Explicit notices that benchmark latency and throughput are host/hardware-dependent.
+
+### Performance API Endpoints
+- `POST /perf/benchmark`: Execute configurable benchmark suite (`iterations`, `file_sizes_kb`, `include_pqc`, `include_classical`).
+- `GET /perf/benchmark`: Execute benchmark suite with query parameters.
+- `GET /perf/latest`: Retrieve most recent benchmark results.
+- `GET /perf/environment`: Query host hardware and environment specifications.
+
+### Frontend Performance Dashboard
+Accessible at `/perf` in the web application:
+- Interactive suite controls (iterations 5/10/20, symmetric payload presets 1KB/64KB/1MB, primitive toggles).
+- Executive comparison cards showing PQC vs Classical overhead ratios for latency, key footprint, and signature size.
+- Category filters (Key Generation, Key Establishment, Signatures, Symmetric Encryption).
+- Export telemetry to JSON and tabulated metrics to CSV.
+
 ## Requirements Compliance
 
 ### Acceptance Criteria Met (US-01: User Registration)

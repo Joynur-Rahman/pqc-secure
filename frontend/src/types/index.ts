@@ -88,3 +88,72 @@ export interface AuditLogsResponse {
   limit: number
   offset: number
 }
+
+export interface TimingStats {
+  median_ms: number
+  p90_ms: number
+  p95_ms: number
+  p99_ms: number
+  min_ms: number
+  max_ms: number
+  mean_ms: number
+  std_dev_ms: number
+  iterations: number
+}
+
+export interface SizeMetrics {
+  public_key_bytes?: number | null
+  private_key_bytes?: number | null
+  ciphertext_bytes?: number | null
+  signature_bytes?: number | null
+  shared_secret_bytes?: number | null
+  overhead_bytes?: number | null
+}
+
+export interface BenchmarkItem {
+  operation: string
+  algorithm: string
+  mode: 'pqc' | 'classical' | 'hybrid' | 'symmetric'
+  category: 'key_generation' | 'key_establishment' | 'signatures' | 'symmetric_encryption'
+  payload_size_bytes?: number | null
+  timing: TimingStats
+  sizes: SizeMetrics
+  throughput_mb_s?: number | null
+}
+
+export interface EnvironmentMetadata {
+  cpu_model: string
+  cpu_cores: number
+  total_ram_gb: number
+  os_name: string
+  os_version: string
+  architecture: string
+  python_version: string
+  cryptography_version: string
+  pqc_backend: string
+  environment_notice: string
+}
+
+export interface BenchmarkSummary {
+  pqc_total_time_ms: number
+  classical_total_time_ms: number
+  time_ratio: number
+  key_size_overhead_ratio: number
+  signature_size_overhead_ratio: number
+}
+
+export interface BenchmarkResponse {
+  id: string
+  timestamp: string
+  iterations: number
+  environment: EnvironmentMetadata
+  summary: BenchmarkSummary
+  results: BenchmarkItem[]
+}
+
+export interface BenchmarkRequest {
+  iterations?: number
+  file_sizes_kb?: number[]
+  include_pqc?: boolean
+  include_classical?: boolean
+}
