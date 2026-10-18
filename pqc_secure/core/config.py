@@ -103,7 +103,12 @@ class Settings(BaseSettings):
 
     def get_allowed_origins_list(self) -> list:
         """Parse allowed origins from comma-separated string"""
-        return [origin.strip() for origin in self.allowed_origins.split(",")]
+        origins = [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
+        if not self.is_production():
+            for test_origin in ["http://testserver", "https://testserver"]:
+                if test_origin not in origins:
+                    origins.append(test_origin)
+        return origins
     
     def get_audit_log_events(self) -> list:
         """Parse audit log events from comma-separated string"""

@@ -80,17 +80,30 @@ class TestSettingsHelpers:
     def test_get_allowed_origins_list(self):
         """Test parsing allowed origins list"""
         settings = Settings(
-            allowed_origins="http://localhost:3000,http://localhost:3001"
+            allowed_origins="http://localhost:3000,http://localhost:3001",
+            environment="production"
         )
         origins = settings.get_allowed_origins_list()
         assert len(origins) == 2
         assert origins[0] == "http://localhost:3000"
         assert origins[1] == "http://localhost:3001"
-    
+
+    def test_get_allowed_origins_includes_testserver_in_dev(self):
+        """Test development environment includes testserver origins"""
+        settings = Settings(
+            allowed_origins="http://localhost:3000",
+            environment="development"
+        )
+        origins = settings.get_allowed_origins_list()
+        assert "http://localhost:3000" in origins
+        assert "http://testserver" in origins
+        assert "https://testserver" in origins
+
     def test_get_allowed_origins_with_whitespace(self):
         """Test parsing origins handles whitespace"""
         settings = Settings(
-            allowed_origins="http://localhost:3000 , http://localhost:3001"
+            allowed_origins="http://localhost:3000 , http://localhost:3001",
+            environment="production"
         )
         origins = settings.get_allowed_origins_list()
         assert origins[0] == "http://localhost:3000"

@@ -19,6 +19,13 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from pqc_secure.api.deps import get_current_active_user, get_db
+from pqc_secure.core.validation import (
+    sanitize_filename,
+    sanitize_text,
+    validate_crypto_mode,
+    validate_email_format,
+    validate_file_security,
+)
 from pqc_secure.db.models import AccessGrant, AuditEventType, FilePackage, GrantStatus, User
 from pqc_secure.services.audit import AuditService
 from pqc_secure.schemas.files import (
@@ -104,13 +111,16 @@ async def upload_file(
 ):
     """Upload complete file or chunk for subsequent encryption and sharing."""
     effective_upload_id = upload_id or str(uuid.uuid4())
-    filename = file.filename or "uploaded_file"
+    raw_filename = file.filename or "uploaded_file"
+    clean_filename = sanitize_filename(raw_filename)
 
     try:
         chunk_data = await file.read()
+        validate_file_security(clean_filename, len(chunk_data))
+
         is_complete, total_bytes = FileService.save_upload_chunk(
             upload_id=effective_upload_id,
-            filename=filename,
+            filename=clean_filename,
             chunk_number=chunk_number,
             total_chunks=total_chunks,
             chunk_data=chunk_data,
@@ -118,14 +128,14 @@ async def upload_file(
 
         return FileUploadResponse(
             upload_id=effective_upload_id,
-            filename=filename,
+            filename=clean_filename,
             chunk_number=chunk_number,
             total_chunks=total_chunks,
             bytes_uploaded=total_bytes,
             is_complete=is_complete,
             message="Chunk uploaded successfully" if not is_complete else "File upload complete and staged",
         )
-    except FileUploadError as e:
+    except (FileUploadError, ValueError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
@@ -146,13 +156,21 @@ async def share_file(
     user_agent = request.headers.get("user-agent")
 
     try:
+        # Validate input parameters
+        valid_mode = validate_crypto_mode(body.encryption_mode)
+        valid_emails = (
+            [validate_email_format(email) for email in body.recipient_emails]
+            if body.recipient_emails
+            else None
+        )
+
         package = FileService.share_file_package(
             db=db,
             sender_id=current_user.id,
             upload_id=body.upload_id,
-            recipient_emails=body.recipient_emails,
+            recipient_emails=valid_emails,
             recipient_ids=body.recipient_ids,
-            encryption_mode=body.encryption_mode,
+            encryption_mode=valid_mode,
             sender_signing_key_id=body.sender_signing_key_id,
             ip_address=client_ip,
             user_agent=user_agent,

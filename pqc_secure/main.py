@@ -11,7 +11,12 @@ from pqc_secure.core.config import settings
 from pqc_secure.core.logging import logger
 from pqc_secure.db.session import dispose_connection_pool, engine
 from pqc_secure.db.transaction import get_pool_status
-from pqc_secure.middleware.session import SessionValidationMiddleware
+from pqc_secure.middleware import (
+    SessionValidationMiddleware,
+    SecurityHeadersMiddleware,
+    CSRFProtectionMiddleware,
+)
+from pqc_secure.core.errors import register_exception_handlers
 from pqc_secure.api import auth, keys, files, audit, perf
 
 # Initialize logging
@@ -48,7 +53,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Security middleware
+# Register standardized error handlers
+register_exception_handlers(app)
+
+# Security and hardening middleware
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "0.0.0.0", "testserver"])
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +66,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(CSRFProtectionMiddleware)
 app.add_middleware(SessionValidationMiddleware)
 
 # Register API routers
