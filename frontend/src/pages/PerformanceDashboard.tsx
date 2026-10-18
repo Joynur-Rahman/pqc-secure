@@ -169,12 +169,17 @@ export default function PerformanceDashboard() {
   const activeEnv = environment || benchmarkData?.environment
 
   return (
-    <div className="space-y-8 pb-12">
+    <div data-ui="performance-dashboard" className="space-y-8 pb-12 max-w-7xl mx-auto px-4 sm:px-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Performance Measurement & Evaluation</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
+              Performance Measurement & Evaluation
+            </h1>
+            <span className="pqc-badge pqc-badge-quantum text-[10px] py-0.5">Empirical Telemetry</span>
+          </div>
+          <p className="text-xs text-neutral-400 mt-1">
             Empirical benchmarking of Post-Quantum Cryptography (ML-KEM-768, ML-DSA-65) vs. Classical (X25519, Ed25519) and AES-256-GCM.
           </p>
         </div>
@@ -182,35 +187,41 @@ export default function PerformanceDashboard() {
           <button
             onClick={handleExportJson}
             disabled={!benchmarkData || running}
-            className="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition"
+            className="pqc-btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
             title="Export full benchmark telemetry in JSON"
           >
-            📥 Export JSON
+            <svg className="w-3.5 h-3.5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Export JSON</span>
           </button>
           <button
             onClick={handleExportCsv}
             disabled={!benchmarkData || running}
-            className="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition"
+            className="pqc-btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
             title="Export tabulated benchmark figures in CSV"
           >
-            📊 Export CSV
+            <svg className="w-3.5 h-3.5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Export CSV</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
-          <div className="font-semibold">Benchmark Error</div>
+        <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+          <div className="font-semibold mb-0.5">Benchmark Error</div>
           <div>{error}</div>
         </div>
       )}
 
       {/* Benchmark Control Bar */}
-      <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm space-y-4">
-        <div className="text-sm font-semibold text-gray-900 border-b border-gray-100 pb-2 flex items-center justify-between">
+      <div className="pqc-card p-5 space-y-4">
+        <div className="text-xs font-semibold text-neutral-300 pb-1 flex items-center justify-between">
           <span>Benchmark Suite Configuration</span>
           {benchmarkData && (
-            <span className="text-xs font-normal text-gray-500">
+            <span className="text-[11px] font-normal text-neutral-400">
               Last executed: {new Date(benchmarkData.timestamp).toLocaleTimeString()} ({benchmarkData.iterations} iterations)
             </span>
           )}
@@ -218,55 +229,55 @@ export default function PerformanceDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
               Iterations per primitive
             </label>
             <select
               value={iterations}
               onChange={(e) => setIterations(Number(e.target.value))}
               disabled={running}
-              className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5"
+              className="pqc-input text-xs"
             >
-              <option value={5}>5 iterations (Fast preview)</option>
-              <option value={10}>10 iterations (Balanced evaluation)</option>
-              <option value={20}>20 iterations (High statistical accuracy)</option>
+              <option value={5} className="bg-[#111214]">5 iterations (Fast preview)</option>
+              <option value={10} className="bg-[#111214]">10 iterations (Balanced evaluation)</option>
+              <option value={20} className="bg-[#111214]">20 iterations (High statistical accuracy)</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
               Symmetric Payloads
             </label>
             <select
               value={selectedSizePreset}
               onChange={(e) => setSelectedSizePreset(e.target.value)}
               disabled={running}
-              className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5"
+              className="pqc-input text-xs"
             >
-              <option value="quick">1 KB payload</option>
-              <option value="standard">1 KB & 64 KB</option>
-              <option value="heavy">1 KB, 64 KB & 1 MB</option>
+              <option value="quick" className="bg-[#111214]">1 KB payload</option>
+              <option value="standard" className="bg-[#111214]">1 KB & 64 KB</option>
+              <option value="heavy" className="bg-[#111214]">1 KB, 64 KB & 1 MB</option>
             </select>
           </div>
 
           <div className="flex items-center gap-4 py-2">
-            <label className="flex items-center text-xs font-medium text-gray-700 cursor-pointer">
+            <label className="flex items-center text-xs font-medium text-neutral-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={includePqc}
                 onChange={(e) => setIncludePqc(e.target.checked)}
                 disabled={running}
-                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-2"
+                className="h-4 w-4 rounded bg-white/[0.05] border-white/[0.2] text-emerald-500 accent-emerald-500 mr-2 cursor-pointer"
               />
               PQC (ML-KEM / ML-DSA)
             </label>
-            <label className="flex items-center text-xs font-medium text-gray-700 cursor-pointer">
+            <label className="flex items-center text-xs font-medium text-neutral-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeClassical}
                 onChange={(e) => setIncludeClassical(e.target.checked)}
                 disabled={running}
-                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-2"
+                className="h-4 w-4 rounded bg-white/[0.05] border-white/[0.2] text-emerald-500 accent-emerald-500 mr-2 cursor-pointer"
               />
               Classical (X25519 / Ed25519)
             </label>
@@ -276,19 +287,19 @@ export default function PerformanceDashboard() {
             <button
               onClick={handleRunBenchmark}
               disabled={running || (!includePqc && !includeClassical)}
-              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="pqc-btn-primary w-full py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
             >
               {running ? (
                 <>
-                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
+                  <span className="pqc-dot-pulse"></span>
                   <span>Running Benchmarks...</span>
                 </>
               ) : (
                 <>
-                  <span>⚡ Run Benchmark Suite</span>
+                  <svg className="w-4 h-4 text-neutral-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Run Benchmark Suite</span>
                 </>
               )}
             </button>
@@ -298,138 +309,140 @@ export default function PerformanceDashboard() {
 
       {/* Environment Metadata & Host Warning Card */}
       {activeEnv && (
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-lg p-5 shadow">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-gray-700 pb-4 mb-4">
+        <div className="pqc-card p-5 bg-[#0c0d0e] border border-white/[0.08] space-y-4">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 pb-1">
             <div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                <span className="pqc-dot-pulse"></span>
+                <span className="text-xs font-semibold text-emerald-400">
                   Execution Environment
                 </span>
               </div>
-              <h2 className="text-lg font-bold text-white mt-1">
-                {activeEnv.cpu_model} ({activeEnv.cpu_cores} Cores)
+              <h2 className="text-base font-semibold text-white mt-1">
+                {activeEnv.cpu_model || 'Standard CPU'} ({activeEnv.cpu_cores || 'Multi'}-Core)
               </h2>
             </div>
-            <div className="text-right text-xs text-gray-300">
-              <div>OS: {activeEnv.os_name} {activeEnv.os_version} ({activeEnv.architecture})</div>
-              <div>Memory: {activeEnv.total_ram_gb.toFixed(1)} GB Physical RAM</div>
+            <div className="text-left md:text-right text-xs text-neutral-400 space-y-0.5">
+              <div>OS: {activeEnv.os_name || activeEnv.os || 'Linux / Windows'} {activeEnv.os_version || ''} ({activeEnv.architecture || 'x86_64'})</div>
+              <div>Memory: {((activeEnv.total_ram_gb ?? activeEnv.total_memory_gb) ?? 16.0).toFixed(1)} GB Physical RAM</div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div className="bg-gray-800/80 p-2.5 rounded border border-gray-700">
-              <span className="text-gray-400 block">PQC Cryptographic Engine</span>
-              <span className="font-semibold text-emerald-300">{activeEnv.pqc_backend}</span>
+            <div className="pqc-card p-3 bg-[#111214] border-white/[0.06]">
+              <span className="text-neutral-400 text-[11px] block">PQC Cryptographic Engine</span>
+              <span className="font-semibold text-emerald-300 mt-0.5 block truncate">{activeEnv.pqc_backend || 'liboqs-python'}</span>
             </div>
-            <div className="bg-gray-800/80 p-2.5 rounded border border-gray-700">
-              <span className="text-gray-400 block">Python Runtime</span>
-              <span className="font-semibold text-gray-200">{activeEnv.python_version}</span>
+            <div className="pqc-card p-3 bg-[#111214] border-white/[0.06]">
+              <span className="text-neutral-400 text-[11px] block">Python Runtime</span>
+              <span className="font-semibold text-neutral-200 mt-0.5 block">{activeEnv.python_version || '3.11+'}</span>
             </div>
-            <div className="bg-gray-800/80 p-2.5 rounded border border-gray-700">
-              <span className="text-gray-400 block">Cryptography Library</span>
-              <span className="font-semibold text-gray-200">v{activeEnv.cryptography_version}</span>
+            <div className="pqc-card p-3 bg-[#111214] border-white/[0.06]">
+              <span className="text-neutral-400 text-[11px] block">Cryptography Library</span>
+              <span className="font-semibold text-neutral-200 mt-0.5 block">v{activeEnv.cryptography_version || '42.0.0'}</span>
             </div>
-            <div className="bg-gray-800/80 p-2.5 rounded border border-gray-700">
-              <span className="text-gray-400 block">Statistical Metrics</span>
-              <span className="font-semibold text-gray-200">p50, p90, p95, p99, Min, Max</span>
+            <div className="pqc-card p-3 bg-[#111214] border-white/[0.06]">
+              <span className="text-neutral-400 text-[11px] block">Statistical Metrics</span>
+              <span className="font-semibold text-neutral-200 mt-0.5 block">p50, p90, p95, p99, Min, Max</span>
             </div>
           </div>
 
-          <div className="mt-4 p-3 bg-blue-950/60 border border-blue-800/80 rounded text-xs text-blue-200">
-            <span className="font-semibold text-blue-100">Environment Dependency Notice: </span>
-            {activeEnv.environment_notice}
-          </div>
+          {activeEnv.environment_notice && (
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs text-emerald-300 leading-relaxed">
+              <span className="font-semibold text-emerald-200">Environment Dependency Notice: </span>
+              {activeEnv.environment_notice}
+            </div>
+          )}
         </div>
       )}
 
       {/* Comparative Executive Summary Cards */}
       {benchmarkData && benchmarkData.summary && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Latency Ratio Card */}
-          <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
+          <div className="pqc-card p-5 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Computation Time</div>
+              <div className="text-xs font-semibold text-neutral-400">Total Computation Time</div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-gray-900">
-                  {benchmarkData.summary.pqc_total_time_ms.toFixed(2)} ms
+                <span className="text-2xl font-bold text-white">
+                  {(benchmarkData.summary.pqc_total_time_ms ?? 0).toFixed(2)} ms
                 </span>
-                <span className="text-xs text-gray-500">PQC suite</span>
+                <span className="text-[11px] text-neutral-400">PQC suite</span>
               </div>
-              <div className="text-xs text-gray-600 mt-1">
-                Classical: <span className="font-semibold">{benchmarkData.summary.classical_total_time_ms.toFixed(2)} ms</span>
+              <div className="text-xs text-neutral-400 mt-1">
+                Classical: <span className="font-semibold text-neutral-200">{(benchmarkData.summary.classical_total_time_ms ?? 0).toFixed(2)} ms</span>
               </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="mt-4 pt-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">Timing Overhead Ratio:</span>
-                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                  {benchmarkData.summary.time_ratio.toFixed(2)}x
+                <span className="text-neutral-400">Overhead Ratio:</span>
+                <span className="pqc-badge pqc-badge-quantum">
+                  {((benchmarkData.summary.time_overhead_ratio ?? benchmarkData.summary.time_ratio) ?? 1).toFixed(2)}x
                 </span>
               </div>
             </div>
           </div>
 
           {/* Key Size Overhead Card */}
-          <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
+          <div className="pqc-card p-5 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Public Key Footprint</div>
+              <div className="text-xs font-semibold text-neutral-400">Public Key Footprint</div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-purple-700">1,184 Bytes</span>
-                <span className="text-xs text-gray-500">ML-KEM-768</span>
+                <span className="text-2xl font-bold text-cyan-400">1,184 Bytes</span>
+                <span className="text-[11px] text-neutral-400">ML-KEM-768</span>
               </div>
-              <div className="text-xs text-gray-600 mt-1">
-                X25519: <span className="font-semibold">32 Bytes</span> (Curve25519)
+              <div className="text-xs text-neutral-400 mt-1">
+                X25519: <span className="font-semibold text-neutral-200">32 Bytes</span> (Curve25519)
               </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="mt-4 pt-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">KEM Key Size Ratio:</span>
-                <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded">
-                  {benchmarkData.summary.key_size_overhead_ratio.toFixed(1)}x
+                <span className="text-neutral-400">Key Overhead:</span>
+                <span className="pqc-badge pqc-badge-cyan">
+                  {(benchmarkData.summary.key_size_overhead_ratio ?? 37).toFixed(1)}x
                 </span>
               </div>
             </div>
           </div>
 
           {/* Signature Size Overhead Card */}
-          <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
+          <div className="pqc-card p-5 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Signature Footprint</div>
+              <div className="text-xs font-semibold text-neutral-400">Signature Footprint</div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-indigo-700">3,309 Bytes</span>
-                <span className="text-xs text-gray-500">ML-DSA-65</span>
+                <span className="text-2xl font-bold text-emerald-400">3,309 Bytes</span>
+                <span className="text-[11px] text-neutral-400">ML-DSA-65</span>
               </div>
-              <div className="text-xs text-gray-600 mt-1">
-                Ed25519: <span className="font-semibold">64 Bytes</span> (Edwards-curve)
+              <div className="text-xs text-neutral-400 mt-1">
+                Ed25519: <span className="font-semibold text-neutral-200">64 Bytes</span> (Edwards-curve)
               </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="mt-4 pt-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">Signature Size Ratio:</span>
-                <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
-                  {benchmarkData.summary.signature_size_overhead_ratio.toFixed(1)}x
+                <span className="text-neutral-400">Signature Overhead:</span>
+                <span className="pqc-badge pqc-badge-quantum">
+                  {(benchmarkData.summary.signature_size_overhead_ratio ?? 51.7).toFixed(1)}x
                 </span>
               </div>
             </div>
           </div>
 
           {/* Framing Overhead Card */}
-          <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
+          <div className="pqc-card p-5 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ciphertext / Framing</div>
+              <div className="text-xs font-semibold text-neutral-400">Ciphertext / Framing</div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-emerald-700">1,088 Bytes</span>
-                <span className="text-xs text-gray-500">KEM Encapsulation</span>
+                <span className="text-2xl font-bold text-emerald-400">1,088 Bytes</span>
+                <span className="text-[11px] text-neutral-400">KEM Encapsulation</span>
               </div>
-              <div className="text-xs text-gray-600 mt-1">
-                AES-GCM Framing: <span className="font-semibold">28 Bytes</span> (12B IV + 16B Tag)
+              <div className="text-xs text-neutral-400 mt-1">
+                AES-GCM Framing: <span className="font-semibold text-neutral-200">28 Bytes</span> (12B IV + 16B Tag)
               </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="mt-4 pt-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">Shared Secret:</span>
-                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                <span className="text-neutral-400">Shared Secret:</span>
+                <span className="pqc-badge pqc-badge-quantum">
                   32 Bytes (256-bit)
                 </span>
               </div>
@@ -440,63 +453,63 @@ export default function PerformanceDashboard() {
 
       {/* Visual Comparative Bar Charts */}
       {benchmarkData && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
-          <h2 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-3">
+        <div className="pqc-card p-6 space-y-6">
+          <h2 className="text-xs font-semibold text-neutral-300 pb-1">
             Post-Quantum vs. Classical Comparative Analysis
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Visual 1: Key Exchange Comparison */}
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold text-neutral-300">
                 Key Establishment (ML-KEM-768 vs X25519)
               </h3>
               <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
+                  <div className="flex justify-between text-xs font-medium text-neutral-300 mb-1.5">
                     <span>ML-KEM-768 (Encapsulation + Decapsulation)</span>
-                    <span className="font-bold text-purple-600">1,088 B Ciphertext</span>
+                    <span className="font-bold text-cyan-400">1,088 B Ciphertext</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                    <div className="bg-purple-600 h-3 rounded-full" style={{ width: '92%' }}></div>
+                  <div className="w-full bg-[#0c0d0e] rounded-full h-2.5 overflow-hidden border border-white/[0.06]">
+                    <div className="bg-cyan-500 h-full rounded-full" style={{ width: '92%' }}></div>
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
+                  <div className="flex justify-between text-xs font-medium text-neutral-300 mb-1.5">
                     <span>X25519 (Diffie-Hellman Key Agreement)</span>
-                    <span className="font-bold text-gray-600">32 B Public Key</span>
+                    <span className="font-bold text-amber-400">32 B Public Key</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                    <div className="bg-blue-500 h-3 rounded-full" style={{ width: '8%' }}></div>
+                  <div className="w-full bg-[#0c0d0e] rounded-full h-2.5 overflow-hidden border border-white/[0.06]">
+                    <div className="bg-amber-500 h-full rounded-full" style={{ width: '8%' }}></div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Visual 2: Signature Comparison */}
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold text-neutral-300">
                 Digital Signatures (ML-DSA-65 vs Ed25519)
               </h3>
               <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
+                  <div className="flex justify-between text-xs font-medium text-neutral-300 mb-1.5">
                     <span>ML-DSA-65 Signature Size</span>
-                    <span className="font-bold text-indigo-600">3,309 Bytes</span>
+                    <span className="font-bold text-emerald-400">3,309 Bytes</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                    <div className="bg-indigo-600 h-3 rounded-full" style={{ width: '98%' }}></div>
+                  <div className="w-full bg-[#0c0d0e] rounded-full h-2.5 overflow-hidden border border-white/[0.06]">
+                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: '98%' }}></div>
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
+                  <div className="flex justify-between text-xs font-medium text-neutral-300 mb-1.5">
                     <span>Ed25519 Signature Size</span>
-                    <span className="font-bold text-gray-600">64 Bytes</span>
+                    <span className="font-bold text-amber-400">64 Bytes</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                    <div className="bg-emerald-500 h-3 rounded-full" style={{ width: '3%' }}></div>
+                  <div className="w-full bg-[#0c0d0e] rounded-full h-2.5 overflow-hidden border border-white/[0.06]">
+                    <div className="bg-amber-500 h-full rounded-full" style={{ width: '3%' }}></div>
                   </div>
                 </div>
               </div>
@@ -506,9 +519,9 @@ export default function PerformanceDashboard() {
       )}
 
       {/* Tabular Statistical Breakdown */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="pqc-card overflow-hidden">
         {/* Category Filter Tabs */}
-        <div className="border-b border-gray-200 bg-gray-50 px-6 py-3 flex flex-wrap gap-2">
+        <div className="bg-[#0c0d0e]/80 px-5 py-3 flex flex-wrap gap-2">
           {[
             { id: 'all', label: 'All Operations' },
             { id: 'key_generation', label: 'Key Generation' },
@@ -519,10 +532,10 @@ export default function PerformanceDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveCategory(tab.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 activeCategory === tab.id
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                  : 'text-neutral-400 hover:text-white hover:bg-white/[0.03]'
               }`}
             >
               {tab.label}
@@ -533,36 +546,33 @@ export default function PerformanceDashboard() {
         {/* Table Content */}
         <div className="overflow-x-auto">
           {loading && !benchmarkData ? (
-            <div className="p-8 text-center text-sm text-gray-500">
-              Measuring cryptographic performance across algorithms...
+            <div className="p-8 text-center text-xs text-neutral-400 space-y-2">
+              <span className="pqc-dot-pulse inline-block"></span>
+              <p>Measuring cryptographic performance across algorithms...</p>
             </div>
           ) : filteredResults.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-500">
+            <div className="p-8 text-center text-xs text-neutral-400">
               No benchmark results in this category. Click "Run Benchmark Suite" above.
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200 text-left text-xs">
-              <thead className="bg-gray-100 text-gray-700 uppercase tracking-wider font-semibold">
+            <table className="pqc-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-3">Operation</th>
-                  <th className="px-4 py-3">Algorithm</th>
-                  <th className="px-4 py-3">Mode</th>
-                  <th className="px-4 py-3 text-right">Median (p50)</th>
-                  <th className="px-4 py-3 text-right">p90</th>
-                  <th className="px-4 py-3 text-right">p95</th>
-                  <th className="px-4 py-3 text-right">Min / Max</th>
-                  <th className="px-4 py-3 text-right">Key / Output Size</th>
-                  <th className="px-4 py-3 text-right">Overhead / Throughput</th>
+                  <th>Operation</th>
+                  <th>Algorithm</th>
+                  <th>Mode</th>
+                  <th className="text-right">Median (p50)</th>
+                  <th className="text-right">p90</th>
+                  <th className="text-right">p95</th>
+                  <th className="text-right">Min / Max</th>
+                  <th className="text-right">Key / Output Size</th>
+                  <th className="text-right">Overhead / Throughput</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white font-mono">
+              <tbody>
                 {filteredResults.map((item: BenchmarkItem, idx: number) => {
-                  const modeBadgeClass =
-                    item.mode === 'pqc'
-                      ? 'bg-purple-100 text-purple-800 border-purple-200'
-                      : item.mode === 'classical'
-                      ? 'bg-blue-100 text-blue-800 border-blue-200'
-                      : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                  const isPqc = item.mode === 'pqc'
+                  const isClassical = item.mode === 'classical'
 
                   // Compute size text
                   let sizeText = '-'
@@ -585,39 +595,39 @@ export default function PerformanceDashboard() {
                   }
 
                   return (
-                    <tr key={`${item.operation}-${item.algorithm}-${idx}`} className="hover:bg-gray-50/80 transition">
-                      <td className="px-4 py-3 font-sans font-medium text-gray-900">
+                    <tr key={`${item.operation}-${item.algorithm}-${idx}`}>
+                      <td className="font-sans font-medium text-white">
                         {item.operation}
                         {item.payload_size_bytes && (
-                          <span className="block text-[11px] text-gray-400 font-mono">
+                          <span className="block text-[10px] text-neutral-400">
                             Payload: {(item.payload_size_bytes / 1024).toFixed(0)} KB
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-700 font-sans font-semibold">
+                      <td className="font-sans font-semibold text-neutral-200">
                         {item.algorithm}
                       </td>
-                      <td className="px-4 py-3 font-sans">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold border ${modeBadgeClass}`}>
+                      <td className="font-sans">
+                        <span className={`pqc-badge ${isPqc ? 'pqc-badge-quantum' : isClassical ? 'pqc-badge-warning' : 'pqc-badge-cyan'} text-[10px] py-0 px-2`}>
                           {item.mode.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-gray-900">
-                        {item.timing.median_ms.toFixed(3)} ms
+                      <td className="text-right font-bold text-white tabular-nums">
+                        {(item.timing?.median_ms ?? 0).toFixed(3)} ms
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-600">
-                        {item.timing.p90_ms.toFixed(3)} ms
+                      <td className="text-right text-neutral-300 tabular-nums">
+                        {(item.timing?.p90_ms ?? 0).toFixed(3)} ms
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-600">
-                        {item.timing.p95_ms.toFixed(3)} ms
+                      <td className="text-right text-neutral-300 tabular-nums">
+                        {(item.timing?.p95_ms ?? 0).toFixed(3)} ms
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-500 text-[11px]">
-                        {item.timing.min_ms.toFixed(3)} / {item.timing.max_ms.toFixed(3)} ms
+                      <td className="text-right text-neutral-400 text-[11px] tabular-nums">
+                        {(item.timing?.min_ms ?? 0).toFixed(3)} / {(item.timing?.max_ms ?? 0).toFixed(3)} ms
                       </td>
-                      <td className="px-4 py-3 text-right font-sans text-gray-700">
+                      <td className="text-right font-sans text-neutral-300">
                         {sizeText}
                       </td>
-                      <td className="px-4 py-3 text-right font-sans font-medium text-gray-800">
+                      <td className="text-right font-sans font-medium text-emerald-400">
                         {secondaryText}
                       </td>
                     </tr>

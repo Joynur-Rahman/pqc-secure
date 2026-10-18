@@ -127,31 +127,26 @@ export const KeyManagement: React.FC = () => {
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px' }}>
+    <div data-ui="key-management" className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: '600', margin: '0 0 8px 0' }}>
-            Cryptographic Key Management
-          </h2>
-          <p style={{ color: 'var(--text, #6b6375)', fontSize: '15px' }}>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
+              Cryptographic Key Management
+            </h2>
+            <span className="pqc-badge pqc-badge-quantum text-[10px] py-0.5">NIST PQC</span>
+          </div>
+          <p className="text-xs text-neutral-400 mt-1">
             Manage Post-Quantum (ML-KEM, ML-DSA) and Classical (X25519, Ed25519) keys.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="flex items-center gap-2">
           <button
             id="tab-key-list"
             type="button"
             onClick={() => setActiveTab('list')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: '1px solid var(--border, #ccc)',
-              background: activeTab === 'list' ? 'var(--accent, #aa3bff)' : 'transparent',
-              color: activeTab === 'list' ? '#fff' : 'inherit',
-              cursor: 'pointer',
-              fontWeight: '500',
-            }}
+            className={activeTab === 'list' ? 'pqc-btn-primary text-xs py-1.5 px-3.5' : 'pqc-btn-secondary text-xs py-1.5 px-3.5'}
           >
             My Keys ({keys.length})
           </button>
@@ -159,15 +154,7 @@ export const KeyManagement: React.FC = () => {
             id="tab-register-key"
             type="button"
             onClick={() => setActiveTab('register')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: '1px solid var(--border, #ccc)',
-              background: activeTab === 'register' ? 'var(--accent, #aa3bff)' : 'transparent',
-              color: activeTab === 'register' ? '#fff' : 'inherit',
-              cursor: 'pointer',
-              fontWeight: '500',
-            }}
+            className={activeTab === 'register' ? 'pqc-btn-primary text-xs py-1.5 px-3.5' : 'pqc-btn-secondary text-xs py-1.5 px-3.5'}
           >
             + Register Key
           </button>
@@ -178,60 +165,53 @@ export const KeyManagement: React.FC = () => {
       {error && (
         <div
           role="alert"
-          style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid #ef4444',
-            color: '#dc2626',
-            padding: '12px 16px',
-            borderRadius: '6px',
-            marginBottom: '16px',
-          }}
+          className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2"
         >
-          {error}
+          <svg className="w-4 h-4 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>{error}</span>
         </div>
       )}
 
       {successMessage && (
         <div
           role="status"
-          style={{
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid #22c55e',
-            color: '#16a34a',
-            padding: '12px 16px',
-            borderRadius: '6px',
-            marginBottom: '16px',
-          }}
+          className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2"
         >
-          {successMessage}
+          <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{successMessage}</span>
         </div>
       )}
 
       {/* Tab 1: Key List */}
       {activeTab === 'list' && (
-        <div style={{ background: 'var(--code-bg, #f9f9f9)', border: '1px solid var(--border, #e5e4e7)', borderRadius: '8px', padding: '20px' }}>
+        <div className="pqc-card p-5">
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '32px' }}>Loading cryptographic keys...</div>
+            <div className="text-center py-10 space-y-2 text-xs text-neutral-400">
+              <span className="pqc-dot-pulse inline-block"></span>
+              <p>Loading cryptographic keys...</p>
+            </div>
           ) : keys.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px' }}>
-              <p style={{ marginBottom: '16px' }}>No cryptographic keys found for your account.</p>
+            <div className="text-center py-12 space-y-3">
+              <div className="w-10 h-10 mx-auto rounded-lg bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-neutral-400 mb-2">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <p className="text-xs text-neutral-300 font-medium">No cryptographic keys found for your account.</p>
               <button
                 type="button"
                 onClick={() => setActiveTab('register')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  background: 'var(--accent, #aa3bff)',
-                  color: '#fff',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
+                className="pqc-btn-primary text-xs"
               >
                 Register Your First Key
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="space-y-3">
               {keys.map((k) => {
                 const keyId = k.key_id || k.keyId || k.id
                 const isPQC = k.algorithm.includes('ml-') || k.algorithm.includes('kyber') || k.algorithm.includes('dilithium')
@@ -241,77 +221,39 @@ export const KeyManagement: React.FC = () => {
                 return (
                   <div
                     key={keyId}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      background: 'var(--bg, #fff)',
-                      border: '1px solid var(--border, #e5e4e7)',
-                      borderRadius: '6px',
-                      padding: '16px',
-                    }}
+                    className="p-4 rounded-lg bg-[#0c0d0e] border border-white/[0.07] hover:border-white/[0.15] transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
                   >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            background: isPQC ? 'rgba(170, 59, 255, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                            color: isPQC ? '#aa3bff' : '#2563eb',
-                          }}
-                        >
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`pqc-badge ${isPQC ? 'pqc-badge-quantum' : 'pqc-badge-warning'}`}>
                           {isPQC ? 'PQC' : 'CLASSICAL'} : {k.algorithm.toUpperCase()}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            background: '#f3f4f6',
-                            color: '#374151',
-                          }}
-                        >
+                        <code className="px-2 py-0.5 rounded text-[10px] bg-white/[0.05] text-neutral-300 border border-white/[0.08]">
                           v{k.version}
-                        </span>
+                        </code>
                         <span
-                          style={{
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            background: isRevoked
-                              ? 'rgba(239, 68, 68, 0.15)'
+                          className={`pqc-badge ${
+                            isRevoked
+                              ? 'pqc-badge-danger'
                               : isSuperseded
-                              ? 'rgba(245, 158, 11, 0.15)'
-                              : 'rgba(34, 197, 94, 0.15)',
-                            color: isRevoked ? '#dc2626' : isSuperseded ? '#d97706' : '#16a34a',
-                          }}
+                              ? 'pqc-badge-warning'
+                              : 'pqc-badge-quantum'
+                          }`}
                         >
                           {k.status.toUpperCase()}
                         </span>
                       </div>
-                      <div style={{ fontFamily: 'var(--mono, monospace)', fontSize: '14px', color: 'var(--text-h, #000)' }}>
+                      <div className="pqc-mono text-xs text-sky-300 font-medium break-all">
                         {keyId}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
                         disabled={isRevoked}
                         onClick={() => setRotatingKey(k)}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid var(--border, #ccc)',
-                          background: 'transparent',
-                          cursor: isRevoked ? 'not-allowed' : 'pointer',
-                          opacity: isRevoked ? 0.5 : 1,
-                        }}
+                        className="pqc-btn-secondary text-xs py-1 px-3"
                       >
                         Rotate
                       </button>
@@ -319,15 +261,7 @@ export const KeyManagement: React.FC = () => {
                         type="button"
                         disabled={isRevoked}
                         onClick={() => setRevokingKey(k)}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #ef4444',
-                          color: '#dc2626',
-                          background: 'transparent',
-                          cursor: isRevoked ? 'not-allowed' : 'pointer',
-                          opacity: isRevoked ? 0.5 : 1,
-                        }}
+                        className="pqc-btn-danger text-xs py-1 px-3"
                       >
                         Revoke
                       </button>
@@ -345,66 +279,58 @@ export const KeyManagement: React.FC = () => {
         <form
           id="key-register-form"
           onSubmit={handleRegisterKey}
-          style={{
-            background: 'var(--code-bg, #f9f9f9)',
-            border: '1px solid var(--border, #e5e4e7)',
-            borderRadius: '8px',
-            padding: '24px',
-          }}
+          className="pqc-card p-6 space-y-5"
         >
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontWeight: '500', marginBottom: '8px' }}>
+          <div>
+            <label className="block text-xs font-semibold text-neutral-300 mb-2">
               Cryptographic Paradigm
             </label>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => handleModeChange('pqc')}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  borderRadius: '6px',
-                  border: `2px solid ${cryptoMode === 'pqc' ? 'var(--accent, #aa3bff)' : 'var(--border, #ccc)'}`,
-                  background: cryptoMode === 'pqc' ? 'var(--accent-bg, rgba(170, 59, 255, 0.1))' : '#fff',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                }}
+                className={`p-3 rounded-lg border text-left transition-colors ${
+                  cryptoMode === 'pqc'
+                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                    : 'bg-[#0c0d0e] border-white/[0.08] text-neutral-400 hover:text-white'
+                }`}
               >
-                Post-Quantum Cryptography (PQC)
+                <div className="text-xs font-semibold flex items-center justify-between">
+                  <span>Post-Quantum Cryptography (PQC)</span>
+                  {cryptoMode === 'pqc' && <span className="pqc-dot-pulse"></span>}
+                </div>
+                <div className="text-[11px] text-neutral-400 mt-1">
+                  NIST FIPS 203 (ML-KEM) & FIPS 204 (ML-DSA) lattice-based algorithms.
+                </div>
               </button>
               <button
                 type="button"
                 onClick={() => handleModeChange('classical')}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  borderRadius: '6px',
-                  border: `2px solid ${cryptoMode === 'classical' ? 'var(--accent, #aa3bff)' : 'var(--border, #ccc)'}`,
-                  background: cryptoMode === 'classical' ? 'rgba(59, 130, 246, 0.1)' : '#fff',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                }}
+                className={`p-3 rounded-lg border text-left transition-colors ${
+                  cryptoMode === 'classical'
+                    ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                    : 'bg-[#0c0d0e] border-white/[0.08] text-neutral-400 hover:text-white'
+                }`}
               >
-                Classical Cryptography
+                <div className="text-xs font-semibold">
+                  Classical Cryptography
+                </div>
+                <div className="text-[11px] text-neutral-400 mt-1">
+                  Legacy elliptic curve primitives (X25519 & Ed25519).
+                </div>
               </button>
             </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label htmlFor="algorithm-select" style={{ display: 'block', fontWeight: '500', marginBottom: '8px' }}>
+          <div>
+            <label htmlFor="algorithm-select" className="block text-xs font-semibold text-neutral-300 mb-2">
               Algorithm
             </label>
             <select
               id="algorithm-select"
               value={selectedAlgorithm}
               onChange={(e) => setSelectedAlgorithm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '6px',
-                border: '1px solid var(--border, #ccc)',
-                background: 'var(--bg, #fff)',
-              }}
+              className="pqc-input"
             >
               {cryptoMode === 'pqc' ? (
                 <>
@@ -420,22 +346,15 @@ export const KeyManagement: React.FC = () => {
             </select>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label htmlFor="public-key-input" style={{ fontWeight: '500' }}>
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label htmlFor="public-key-input" className="text-xs font-semibold text-neutral-300">
                 Public Key Material (Base64)
               </label>
               <button
                 type="button"
                 onClick={handleGenerateKey}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--accent, #aa3bff)',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  textDecoration: 'underline',
-                }}
+                className="text-xs text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer"
               >
                 Auto-generate keypair in browser
               </button>
@@ -446,19 +365,13 @@ export const KeyManagement: React.FC = () => {
               value={publicKeyMaterial}
               onChange={(e) => setPublicKeyMaterial(e.target.value)}
               placeholder="Leave blank to auto-generate a secure server-managed keypair (with private key for decryption), or paste custom Base64 public key..."
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '6px',
-                border: '1px solid var(--border, #ccc)',
-                fontFamily: 'var(--mono, monospace)',
-                fontSize: '13px',
-                background: 'var(--bg, #fff)',
-                boxSizing: 'border-box',
-              }}
+              className="pqc-input text-xs"
             />
-            <p style={{ fontSize: '12px', color: 'var(--text, #666)', marginTop: '4px' }}>
-              💡 <strong>Recommended:</strong> Leave blank to generate a cryptographically valid quantum keypair with secure private key storage for decryption.
+            <p className="text-[11px] text-neutral-400 mt-1.5 flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span><strong className="text-neutral-300">Recommended:</strong> Leave blank to generate a cryptographically valid quantum keypair with secure private key storage for decryption.</span>
             </p>
           </div>
 
@@ -466,16 +379,7 @@ export const KeyManagement: React.FC = () => {
             id="btn-register-submit"
             type="submit"
             disabled={isRegistering}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '6px',
-              border: 'none',
-              background: 'var(--accent, #aa3bff)',
-              color: '#fff',
-              fontWeight: '600',
-              cursor: isRegistering ? 'not-allowed' : 'pointer',
-            }}
+            className="pqc-btn-primary w-full py-2.5 text-xs font-semibold"
           >
             {isRegistering ? 'Registering Key...' : 'Register Key'}
           </button>
@@ -487,36 +391,20 @@ export const KeyManagement: React.FC = () => {
         <div
           role="dialog"
           aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
         >
-          <div
-            style={{
-              background: 'var(--bg, #fff)',
-              borderRadius: '8px',
-              padding: '24px',
-              maxWidth: '480px',
-              width: '90%',
-            }}
-          >
-            <h3 style={{ margin: '0 0 12px 0' }}>Rotate Key: {rotatingKey.key_id || rotatingKey.keyId}</h3>
-            <p style={{ color: 'var(--text, #666)', fontSize: '14px', marginBottom: '20px' }}>
+          <div className="pqc-card pqc-card-elevated max-w-md w-full p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-white">Rotate Key: {rotatingKey.key_id || rotatingKey.keyId}</h3>
+            <p className="text-xs text-neutral-400 leading-relaxed">
               Rotating will advance this key to version {(rotatingKey.version || 1) + 1}. The current version
-              will be marked as <strong>superseded</strong>. Past encrypted files will remain decryptable, and new
+              will be marked as <strong className="text-amber-400">superseded</strong>. Past encrypted files will remain decryptable, and new
               shares will automatically target the new active version.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setRotatingKey(null)}
-                style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid var(--border, #ccc)', background: 'transparent', cursor: 'pointer' }}
+                className="pqc-btn-secondary text-xs py-1.5 px-3.5"
               >
                 Cancel
               </button>
@@ -525,7 +413,7 @@ export const KeyManagement: React.FC = () => {
                 type="button"
                 disabled={actionLoading}
                 onClick={handleConfirmRotate}
-                style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: 'var(--accent, #aa3bff)', color: '#fff', cursor: 'pointer' }}
+                className="pqc-btn-primary text-xs py-1.5 px-3.5"
               >
                 {actionLoading ? 'Rotating...' : 'Confirm Rotation'}
               </button>
@@ -539,34 +427,18 @@ export const KeyManagement: React.FC = () => {
         <div
           role="dialog"
           aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
         >
-          <div
-            style={{
-              background: 'var(--bg, #fff)',
-              borderRadius: '8px',
-              padding: '24px',
-              maxWidth: '480px',
-              width: '90%',
-            }}
-          >
-            <h3 style={{ margin: '0 0 12px 0', color: '#dc2626' }}>
+          <div className="pqc-card pqc-card-elevated max-w-md w-full p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-rose-400">
               Revoke Key: {revokingKey.key_id || revokingKey.keyId}
             </h3>
-            <p style={{ color: 'var(--text, #666)', fontSize: '14px', marginBottom: '16px' }}>
+            <p className="text-xs text-neutral-400 leading-relaxed">
               Are you sure you want to revoke this key? Revoking will immediately prevent other users from selecting
               this key for new file shares. This action cannot be undone.
             </p>
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="revoke-reason" style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '4px' }}>
+            <div className="space-y-1.5">
+              <label htmlFor="revoke-reason" className="block text-xs font-semibold text-neutral-300">
                 Revocation Reason (Optional)
               </label>
               <input
@@ -575,14 +447,14 @@ export const KeyManagement: React.FC = () => {
                 value={revocationReason}
                 onChange={(e) => setRevocationReason(e.target.value)}
                 placeholder="e.g. Device lost, scheduled deprecation"
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border, #ccc)', boxSizing: 'border-box' }}
+                className="pqc-input text-xs"
               />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setRevokingKey(null)}
-                style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid var(--border, #ccc)', background: 'transparent', cursor: 'pointer' }}
+                className="pqc-btn-secondary text-xs py-1.5 px-3.5"
               >
                 Cancel
               </button>
@@ -591,7 +463,7 @@ export const KeyManagement: React.FC = () => {
                 type="button"
                 disabled={actionLoading}
                 onClick={handleConfirmRevoke}
-                style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer' }}
+                className="pqc-btn-danger text-xs py-1.5 px-3.5"
               >
                 {actionLoading ? 'Revoking...' : 'Confirm Revoke'}
               </button>
